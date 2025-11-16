@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class AnimatedWidgets {
-  // 1. Animated Button with Scale
   static Widget animatedButton({
     required Widget child,
     required VoidCallback onTap,
@@ -32,7 +31,6 @@ class AnimatedWidgets {
     );
   }
 
-  // 2. Bounce Button
   static Widget bounceButton({
     required Widget child,
     required VoidCallback onTap,

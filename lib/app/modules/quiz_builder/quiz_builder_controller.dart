@@ -77,7 +77,6 @@ class QuizBuilderController extends GetxController {
     isGenerating.value = true;
     await Future.delayed(const Duration(seconds: 2));
 
-    // Generate questions based on percentages
     final allQuestions = mockDataService.getQuestions(
       chapter: selectedChapter.value,
     );

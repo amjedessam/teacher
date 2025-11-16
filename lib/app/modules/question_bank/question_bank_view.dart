@@ -48,7 +48,6 @@ class QuestionBankView extends GetView<QuestionBankController> {
           onRefresh: controller.refreshQuestions,
           child: Column(
             children: [
-              // Search Bar
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.all(16),
@@ -67,7 +66,6 @@ class QuestionBankView extends GetView<QuestionBankController> {
                 ),
               ),
 
-              // Active Filters
               if (controller.selectedDifficulty.value != null ||
                   controller.selectedChapter.value != null)
                 Container(
@@ -104,7 +102,7 @@ class QuestionBankView extends GetView<QuestionBankController> {
                       ),
                     ],
                   ),
-                ), // Questions Count
+                ),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -123,7 +121,6 @@ class QuestionBankView extends GetView<QuestionBankController> {
                 ),
               ),
 
-              // Questions List
               Expanded(
                 child: controller.filteredQuestions.isEmpty
                     ? _buildEmptyState()
@@ -160,7 +157,6 @@ class QuestionBankView extends GetView<QuestionBankController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Question Header
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -234,7 +230,6 @@ class QuestionBankView extends GetView<QuestionBankController> {
 
           const Divider(height: 1),
 
-          // Question Stats
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -340,7 +335,6 @@ class QuestionBankView extends GetView<QuestionBankController> {
             Text('تصفية الأسئلة', style: AppTextStyles.h3),
             const SizedBox(height: 24),
 
-            // Difficulty Filter
             Text('مستوى الصعوبة', style: AppTextStyles.labelBold),
             const SizedBox(height: 12),
             Obx(
@@ -374,7 +368,6 @@ class QuestionBankView extends GetView<QuestionBankController> {
 
             const SizedBox(height: 24),
 
-            // Chapter Filter
             Text('الفصل', style: AppTextStyles.labelBold),
             const SizedBox(height: 12),
             Obx(

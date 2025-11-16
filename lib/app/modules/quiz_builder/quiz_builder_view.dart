@@ -33,7 +33,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Info Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -57,7 +56,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
             const SizedBox(height: 24),
 
-            // Class Selection
             Text('الفصل الدراسي', style: AppTextStyles.labelBold),
             const SizedBox(height: 12),
             Obx(
@@ -82,7 +80,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
             const SizedBox(height: 24),
 
-            // Chapter & Unit
             Row(
               children: [
                 Expanded(
@@ -91,75 +88,19 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
                     children: [
                       Text('الفصل', style: AppTextStyles.labelBold),
                       const SizedBox(height: 12),
-                      //       Obx(
-                      //         () => DropdownButtonFormField<String>(
-                      //           value: controller.selectedChapter.value,
-                      //           decoration: const InputDecoration(),
-                      //           items: ['الجبر', 'الهندسة', 'حساب المثلثات']
-                      //               .map(
-                      //                 (chapter) => DropdownMenuItem(
-                      //                   value: chapter,
-                      //                   child: Text(chapter),
-                      //                 ),
-                      //               )
-                      //               .toList(),
-                      //           onChanged: (value) {
-                      //             if (value != null) {
-                      //               controller.selectedChapter.value = value;
-                      //             }
-                      //           },
-                      //         ),
-                      //       ),
-                      //     ],
-                      //   ),
-                      // ),
-                      // const SizedBox(width: 16),
-                      // Expanded(
-                      //   child: Column(
-                      //     crossAxisAlignment: CrossAxisAlignment.start,
-                      //     children: [
-                      //       Text('الوحدة', style: AppTextStyles.labelBold),
-                      //       const SizedBox(height: 12),
-                      //       Obx(
-                      //         () => DropdownButtonFormField<String>(
-                      //           value: controller.selectedUnit.value,
-                      //           decoration: const InputDecoration(),
-                      //           items:
-                      //               [
-                      //                     'المعادلات الخطية',
-                      //                     'المعادلات التربيعية',
-                      //                     'المتتاليات',
-                      //                   ]
-                      //                   .map(
-                      //                     (unit) => DropdownMenuItem(
-                      //                       value: unit,
-                      //                       child: Text(unit),
-                      //                     ),
-                      //                   )
-                      //                   .toList(),
-                      //           onChanged: (value) {
-                      //             if (value != null) {
-                      //               controller.selectedUnit.value = value;
-                      //             }
-                      //           },
-                      //         ),
-                      //       ),
-                      // ... (داخل Row الخاص بـ Chapter & Unit)
 
-                      // Dropdown للفصل
                       Obx(
                         () => DropdownButtonFormField<String>(
                           value: controller.selectedChapter.value,
                           decoration: const InputDecoration(),
-                          isExpanded: true, // <--- أضف هذا السطر
+                          isExpanded: true,
                           items: ['الجبر', 'الهندسة', 'حساب المثلثات']
                               .map(
                                 (chapter) => DropdownMenuItem(
                                   value: chapter,
                                   child: Text(
                                     chapter,
-                                    overflow: TextOverflow
-                                        .ellipsis, // لمنع تجاوز النص الطويل
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               )
@@ -172,15 +113,12 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
                         ),
                       ),
 
-                      // ...
-
-                      // Dropdown للوحدة
                       SizedBox(height: 5),
                       Obx(
                         () => DropdownButtonFormField<String>(
                           value: controller.selectedUnit.value,
                           decoration: const InputDecoration(),
-                          isExpanded: true, // <--- أضف هذا السطر
+                          isExpanded: true,
                           items:
                               [
                                     'المعادلات الخطية',
@@ -192,8 +130,7 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
                                       value: unit,
                                       child: Text(
                                         unit,
-                                        overflow: TextOverflow
-                                            .ellipsis, // لمنع تجاوز النص الطويل
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   )
@@ -213,7 +150,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
             const SizedBox(height: 24),
 
-            // Question Count
             Text('عدد الأسئلة', style: AppTextStyles.labelBold),
             const SizedBox(height: 12),
             Obx(
@@ -253,11 +189,9 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
             const SizedBox(height: 24),
 
-            // Difficulty Percentages
             Text('توزيع الصعوبة', style: AppTextStyles.labelBold),
             const SizedBox(height: 12),
 
-            // Easy
             _buildDifficultySlider(
               label: 'سهل',
               color: AppColors.success,
@@ -267,7 +201,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
             const SizedBox(height: 16),
 
-            // Medium
             _buildDifficultySlider(
               label: 'متوسط',
               color: AppColors.warning,
@@ -277,7 +210,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
             const SizedBox(height: 16),
 
-            // Hard
             _buildDifficultySlider(
               label: 'صعب',
               color: AppColors.error,
@@ -287,7 +219,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
             const SizedBox(height: 24),
 
-            // Summary Card
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -339,7 +270,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
             const SizedBox(height: 32),
 
-            // Generate Button
             Obx(
               () => SizedBox(
                 width: double.infinity,
@@ -447,7 +377,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
   Widget _buildPreviewMode() {
     return Column(
       children: [
-        // Header
         Container(
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
@@ -502,7 +431,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
           ),
         ),
 
-        // Questions List
         Expanded(
           child: Obx(
             () => ListView.builder(
@@ -519,160 +447,9 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
     );
   }
 
-  // Widget _buildQuestionPreviewCard(question, int number) {
-  //   final difficultyColor = _getDifficultyColor(question.difficulty);
-
-  //   return Container(
-  //     margin: const EdgeInsets.only(bottom: 16),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(16),
-  //       border: Border.all(color: AppColors.border),
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         // Question Header
-  //         Container(
-  //           padding: const EdgeInsets.all(16),
-  //           decoration: BoxDecoration(
-  //             color: difficultyColor.withOpacity(0.1),
-  //             borderRadius: const BorderRadius.vertical(
-  //               top: Radius.circular(16),
-  //             ),
-  //           ),
-  //           child: Row(
-  //             children: [
-  //               Container(
-  //                 width: 32,height: 32,
-  //                 decoration: BoxDecoration(
-  //                   color: difficultyColor,
-  //                   shape: BoxShape.circle,
-  //                 ),
-  //                 child: Center(
-  //                   child: Text(
-  //                     '$number',
-  //                     style: const TextStyle(
-  //                       color: Colors.white,
-  //                       fontWeight: FontWeight.bold,
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ),
-  //               const SizedBox(width: 12),
-  //               Expanded(
-  //                 child: Text(
-  //                   question.questionText,
-  //                   style: AppTextStyles.bodyMedium.copyWith(
-  //                     fontWeight: FontWeight.w600,
-  //                   ),
-  //                   maxLines: 2,
-  //                   overflow: TextOverflow.ellipsis,
-  //                 ),
-  //               ),
-  //               Container(
-  //                 padding: const EdgeInsets.symmetric(
-  //                   horizontal: 10,
-  //                   vertical: 6,
-  //                 ),
-  //                 decoration: BoxDecoration(
-  //                   color: difficultyColor,
-  //                   borderRadius: BorderRadius.circular(6),
-  //                 ),
-  //                 child: Text(
-  //                   _getDifficultyLabel(question.difficulty),
-  //                   style: const TextStyle(
-  //                     color: Colors.white,
-  //                     fontSize: 12,
-  //                     fontWeight: FontWeight.w600,
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-
-  //         // Options
-  //         Padding(
-  //           padding: const EdgeInsets.all(16),
-  //           child: Column(
-  //             children: question.options.asMap().entries.map<Widget>((entry) {
-  //               final index = entry.key;
-  //               final option = entry.value;
-  //               final letter = String.fromCharCode(65 + index);
-  //               // A, B, C, D
-
-  //               return Container(
-  //                 margin: const EdgeInsets.only(bottom: 8),
-  //                 padding: const EdgeInsets.all(12),
-  //                 decoration: BoxDecoration(
-  //                   color: option.isCorrect
-  //                       ? AppColors.success.withOpacity(0.1)
-  //                       : AppColors.background,
-  //                   borderRadius: BorderRadius.circular(8),
-  //                   border: Border.all(
-  //                     color: option.isCorrect
-  //                         ? AppColors.success
-  //                         : AppColors.border,
-  //                     width: option.isCorrect ? 2 : 1,
-  //                   ),
-  //                 ),
-  //                 child: Row(
-  //                   children: [
-  //                     Container(
-  //                       width: 28,
-  //                       height: 28,
-  //                       decoration: BoxDecoration(
-  //                         color: option.isCorrect
-  //                             ? AppColors.success
-  //                             : Colors.white,
-  //                         shape: BoxShape.circle,
-  //                         border: Border.all(
-  //                           color: option.isCorrect
-  //                               ? AppColors.success
-  //                               : AppColors.border,
-  //                         ),
-  //                       ),
-  //                       child: Center(
-  //                         child: Text(
-  //                           letter,
-  //                           style: TextStyle(
-  //                             color: option.isCorrect
-  //                                 ? Colors.white
-  //                                 : AppColors.textPrimary,
-  //                             fontWeight: FontWeight.w600,
-  //                             fontSize: 14,
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     const SizedBox(width: 12),
-  //                     Expanded(
-  //                       child: Text(
-  //                         option.text,
-  //                         style: AppTextStyles.bodyMedium,
-  //                       ),
-  //                     ),
-  //                     if (option.isCorrect)
-  //                       const Icon(
-  //                         Icons.check_circle,
-  //                         color: AppColors.success,
-  //                         size: 20,
-  //                       ),
-  //                   ],
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
   Widget _buildQuestionPreviewCard(question, int number) {
     final difficultyColor = _getDifficultyColor(question.difficulty);
 
-    // قائمة الأحرف التي سنستخدمها
     const List<String> optionLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
     return Container(
@@ -685,7 +462,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ... (بقية الكود الخاص بـ Question Header يبقى كما هو)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -746,7 +522,6 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
             ),
           ),
 
-          // Options
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -754,11 +529,9 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
                 final index = entry.key;
                 final option = entry.value;
 
-                // -- هذا هو التغيير الرئيسي --
-                // نحصل على الحرف من القائمة مباشرة
                 final letter = (index < optionLetters.length)
                     ? optionLetters[index]
-                    : '?'; // حرف احتياطي إذا تجاوز عدد الخيارات
+                    : '?';
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -793,7 +566,7 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
                         ),
                         child: Center(
                           child: Text(
-                            letter, // استخدام المتغير الجديد هنا
+                            letter,
                             style: TextStyle(
                               color: option.isCorrect
                                   ? Colors.white

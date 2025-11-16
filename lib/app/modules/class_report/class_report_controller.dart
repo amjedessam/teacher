@@ -1,8 +1,6 @@
-// class_report_controller.dart
 import 'package:get/get.dart';
 import '../../data/services/mock_data_service.dart';
 import '../../data/models/class_model.dart';
-// import '../../data/models/student_model.dart';
 
 class ClassReportController extends GetxController {
   final mockDataService = MockDataService();

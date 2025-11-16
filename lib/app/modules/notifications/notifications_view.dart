@@ -87,7 +87,6 @@ class NotificationsView extends GetView<NotificationsController> {
               ),
               const SizedBox(width: 16),
 
-              // Content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

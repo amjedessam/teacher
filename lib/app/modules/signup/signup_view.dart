@@ -11,398 +11,382 @@ class SignupView extends GetView<SignupController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // ✨ Animated App Bar
-            SliverAppBar(
-              floating: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  color: AppColors.primary,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: controller.formKey,
+
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 30),
+
+                AnimatedWidgets.scaleIn(
+                  duration: const Duration(milliseconds: 800),
+                  child: _buildLogo(),
                 ),
-                onPressed: () => Get.back(),
-              ),
-            ),
 
-            // Content
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: controller.formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // ✨ Header with Animation
-                      AnimatedWidgets.fadeIn(
-                        duration: const Duration(milliseconds: 600),
-                        child: _buildHeader(),
-                      ),
+                const SizedBox(height: 20),
 
-                      const SizedBox(height: 40),
-
-                      // ✨ Form Fields with Staggered Animation
-                      _buildAnimatedForm(),
-
-                      const SizedBox(height: 24),
-
-                      // ✨ Subjects Selection
-                      AnimatedWidgets.slideIn(
-                        direction: SlideDirection.bottom,
-                        delay: const Duration(milliseconds: 800),
-                        child: _buildSubjectsSection(),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // ✨ Terms & Conditions
-                      AnimatedWidgets.fadeIn(
-                        delay: const Duration(milliseconds: 900),
-                        child: _buildTermsCheckbox(),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // ✨ Sign Up Button
-                      AnimatedWidgets.scaleIn(
-                        delay: const Duration(milliseconds: 1000),
-                        child: _buildSignUpButton(),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // ✨ Login Link
-                      AnimatedWidgets.fadeIn(
-                        delay: const Duration(milliseconds: 1100),
-                        child: _buildLoginLink(),
-                      ),
-                    ],
-                  ),
+                AnimatedWidgets.fadeIn(
+                  delay: const Duration(milliseconds: 300),
+                  child: _buildTitle(),
                 ),
-              ),
+
+                const SizedBox(height: 15),
+
+                AnimatedWidgets.slideIn(
+                  direction: SlideDirection.right,
+
+                  delay: const Duration(milliseconds: 400),
+                  child: _buildNameField(),
+                ),
+
+                const SizedBox(height: 12),
+
+                AnimatedWidgets.slideIn(
+                  direction: SlideDirection.right,
+                  delay: const Duration(milliseconds: 450),
+                  child: _buildEmailField(),
+                ),
+
+                const SizedBox(height: 12),
+
+                AnimatedWidgets.slideIn(
+                  direction: SlideDirection.right,
+                  delay: const Duration(milliseconds: 500),
+                  child: _buildPhoneField(),
+                ),
+
+                const SizedBox(height: 12),
+
+                AnimatedWidgets.slideIn(
+                  direction: SlideDirection.right,
+                  delay: const Duration(milliseconds: 550),
+                  child: _buildSchoolField(),
+                ),
+
+                const SizedBox(height: 12),
+
+                AnimatedWidgets.slideIn(
+                  direction: SlideDirection.right,
+                  delay: const Duration(milliseconds: 600),
+                  child: _buildPasswordField(),
+                ),
+
+                const SizedBox(height: 12),
+
+                AnimatedWidgets.slideIn(
+                  direction: SlideDirection.right,
+                  delay: const Duration(milliseconds: 650),
+
+                  child: _buildConfirmPasswordField(),
+                ),
+
+                const SizedBox(height: 20),
+
+                AnimatedWidgets.fadeIn(
+                  delay: const Duration(milliseconds: 700),
+                  child: _buildSubjectsSection(),
+                ),
+
+                const SizedBox(height: 20),
+
+                AnimatedWidgets.fadeIn(
+                  delay: const Duration(milliseconds: 750),
+                  child: _buildTermsCheckbox(),
+                ),
+
+                const SizedBox(height: 32),
+
+                AnimatedWidgets.scaleIn(
+                  delay: const Duration(milliseconds: 800),
+                  child: _buildSignUpButton(),
+                ),
+
+                const SizedBox(height: 24),
+
+                AnimatedWidgets.fadeIn(
+                  delay: const Duration(milliseconds: 900),
+                  child: _buildLoginLink(),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildLogo() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Icon
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
                 color: AppColors.primary.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: const Icon(
             Icons.person_add_alt_1,
+            size: 60,
             color: Colors.white,
-            size: 32,
           ),
         ),
-        const SizedBox(height: 24),
-
-        // Title
+        const SizedBox(height: 16),
         Text(
-          'إنشاء حساب جديد',
-          style: AppTextStyles.h1.copyWith(
+          'المعلم الذكي',
+          style: AppTextStyles.h2.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8), // Subtitle
-        Text(
-          'املأ البيانات أدناه لإنشاء حسابك',
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textSecondary,
+
+            color: AppColors.primary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildAnimatedForm() {
-    final formFields = [
-      // Name Field
-      _buildTextField(
-        controller: controller.nameController,
-        label: 'الاسم الكامل',
-        hint: 'أدخل اسمك الكامل',
-        icon: Icons.person_outline,
-        validator: controller.validateName,
+  Widget _buildTitle() {
+    return Center(
+      child: Text(
+        'إنشاء حساب جديد',
+        style: AppTextStyles.h4.copyWith(
+          fontWeight: FontWeight.bold,
+          color: AppColors.primary,
+        ),
       ),
+    );
+  }
 
-      const SizedBox(height: 16),
+  Widget _buildNameField() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 255, 255, 255),
+      ),
+      child: TextFormField(
+        controller: controller.nameController,
+        validator: controller.validateName,
+        decoration: const InputDecoration(
+          labelStyle: TextStyle(color: Color(0xFF493Ad5)),
+          hintStyle: TextStyle(color: Color(0xFF493Ad5)),
+          labelText: 'الاسم الكامل',
+          prefixIcon: Icon(Icons.person_outline, color: Color(0xFF493Ad5)),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+        ),
+      ),
+    );
+  }
 
-      // Email Field
-      _buildTextField(
+  Widget _buildEmailField() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 255, 255, 255),
+      ),
+      child: TextFormField(
         controller: controller.emailController,
-        label: 'البريد الإلكتروني',
-        hint: 'example@domain.com',
-        icon: Icons.email_outlined,
         keyboardType: TextInputType.emailAddress,
         validator: controller.validateEmail,
+        decoration: const InputDecoration(
+          labelStyle: TextStyle(color: Color(0xFF493Ad5)),
+          hintStyle: TextStyle(color: Color(0xFF493Ad5)),
+          labelText: 'البريد الإلكتروني',
+          prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF493Ad5)),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+        ),
       ),
+    );
+  }
 
-      const SizedBox(height: 16),
-
-      // Phone Field
-      _buildTextField(
+  Widget _buildPhoneField() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 255, 255, 255),
+      ),
+      child: TextFormField(
         controller: controller.phoneController,
-        label: 'رقم الهاتف',
-        hint: '05xxxxxxxx',
-        icon: Icons.phone_outlined,
         keyboardType: TextInputType.phone,
         validator: controller.validatePhone,
+        decoration: const InputDecoration(
+          labelStyle: TextStyle(color: Color(0xFF493Ad5)),
+          hintStyle: TextStyle(color: Color(0xFF493Ad5)),
+          labelText: 'رقم الهاتف',
+          prefixIcon: Icon(Icons.phone_outlined, color: Color(0xFF493Ad5)),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+        ),
       ),
+    );
+  }
 
-      const SizedBox(height: 16),
-
-      // School Field
-      _buildTextField(
+  Widget _buildSchoolField() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 255, 255, 255),
+      ),
+      child: TextFormField(
         controller: controller.schoolController,
-        label: 'المدرسة',
-        hint: 'اسم المدرسة',
-        icon: Icons.school_outlined,
         validator: controller.validateSchool,
+        decoration: const InputDecoration(
+          labelStyle: TextStyle(color: Color(0xFF493Ad5)),
+          hintStyle: TextStyle(color: Color(0xFF493Ad5)),
+          labelText: 'المدرسة',
+          prefixIcon: Icon(Icons.school_outlined, color: Color(0xFF493Ad5)),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+        ),
       ),
+    );
+  }
 
-      const SizedBox(height: 16),
+  Widget _buildPasswordField() {
+    return Obx(
+      () => TextFormField(
+        controller: controller.passwordController,
+        obscureText: controller.obscurePassword.value,
+        validator: controller.validatePassword,
+        decoration: InputDecoration(
+          labelStyle: const TextStyle(color: Color(0xFF493Ad5)),
+          hintStyle: const TextStyle(color: Color(0xFF493Ad5)),
+          focusColor: const Color(0xFF493Ad5),
+          labelText: 'كلمة المرور',
+          prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF493Ad5)),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
 
-      // Password Field
-      Obx(
-        () => _buildTextField(
-          controller: controller.passwordController,
-          label: 'كلمة المرور',
-          hint: '••••••••',
-          icon: Icons.lock_outline,
-          obscureText: controller.obscurePassword.value,
-          validator: controller.validatePassword,
           suffixIcon: IconButton(
             icon: Icon(
               controller.obscurePassword.value
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
-              color: AppColors.textSecondary,
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              color: AppColors.primary,
             ),
             onPressed: controller.togglePasswordVisibility,
           ),
         ),
       ),
+    );
+  }
 
-      const SizedBox(height: 16),
-
-      // Confirm Password Field
-      Obx(
-        () => _buildTextField(
-          controller: controller.confirmPasswordController,
-          label: 'تأكيد كلمة المرور',
-          hint: '••••••••',
-          icon: Icons.lock_outline,
-          obscureText: controller.obscureConfirmPassword.value,
-          validator: controller.validateConfirmPassword,
+  Widget _buildConfirmPasswordField() {
+    return Obx(
+      () => TextFormField(
+        controller: controller.confirmPasswordController,
+        obscureText: controller.obscureConfirmPassword.value,
+        validator: controller.validateConfirmPassword,
+        decoration: InputDecoration(
+          labelStyle: const TextStyle(color: Color(0xFF493Ad5)),
+          hintStyle: const TextStyle(color: Color(0xFF493Ad5)),
+          focusColor: const Color(0xFF493Ad5),
+          labelText: 'تأكيد كلمة المرور',
+          prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF493Ad5)),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
           suffixIcon: IconButton(
             icon: Icon(
               controller.obscureConfirmPassword.value
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
-              color: AppColors.textSecondary,
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              color: AppColors.primary,
             ),
             onPressed: controller.toggleConfirmPasswordVisibility,
           ),
         ),
       ),
-    ];
-
-    return Column(
-      children: formFields.asMap().entries.map((entry) {
-        final index = entry.key;
-        final widget = entry.value;
-        return AnimatedWidgets.slideIn(
-          direction: SlideDirection.right,
-          delay: Duration(milliseconds: 200 + (index * 50)),
-          child: widget,
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    bool obscureText = false,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-    Widget? suffixIcon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.labelBold.copyWith(color: AppColors.textPrimary),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          validator: validator,
-          style: AppTextStyles.bodyMedium,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary.withOpacity(0.5),
-            ),
-            prefixIcon: Icon(icon, color: AppColors.primary),
-            suffixIcon: suffixIcon,
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
   Widget _buildSubjectsSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8, bottom: 12),
+          child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.book_outlined,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
+              const Icon(
+                Icons.book_outlined,
+                color: Color(0xFF493Ad5),
+                size: 20,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('المواد التي تدرسها', style: AppTextStyles.labelBold),
-                    Text(
-                      'اختر مادة أو أكثر',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+              const SizedBox(width: 8),
+              Text(
+                'المواد التي تدرسها',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: const Color(0xFF493Ad5),
+
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Obx(
-            () => Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: controller.availableSubjects.map((subject) {
-                final isSelected = controller.selectedSubjects.contains(
-                  subject,
-                );
-                return AnimatedWidgets.bounceButton(
-                  onTap: () => controller.toggleSubject(subject),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
+        ),
+        Obx(
+          () => Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: controller.availableSubjects.map((subject) {
+              final isSelected = controller.selectedSubjects.contains(subject);
+              return AnimatedWidgets.bounceButton(
+                onTap: () => controller.toggleSubject(subject),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
                       color: isSelected
                           ? AppColors.primary
-                          : AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.primary.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isSelected)
-                          const Icon(
-                            Icons.check_circle,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        if (isSelected) const SizedBox(width: 6),
-                        Text(
-                          subject,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: isSelected
-                                ? Colors.white
-                                : AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                          : AppColors.primary.withOpacity(0.3),
                     ),
                   ),
-                );
-              }).toList(),
-            ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSelected)
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+
+                      if (isSelected) const SizedBox(width: 6),
+                      Text(
+                        subject,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: isSelected ? Colors.white : AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -423,7 +407,7 @@ class SignupView extends GetView<SignupController> {
                 border: Border.all(
                   color: controller.acceptTerms.value
                       ? AppColors.primary
-                      : AppColors.border,
+                      : const Color(0xFF493Ad5).withOpacity(0.5),
                   width: 2,
                 ),
               ),
@@ -436,12 +420,14 @@ class SignupView extends GetView<SignupController> {
               child: Text.rich(
                 TextSpan(
                   text: 'أوافق على ',
-                  style: AppTextStyles.bodyMedium,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: const Color(0xFF493Ad5),
+                  ),
                   children: [
                     TextSpan(
                       text: 'الشروط والأحكام',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.primary,
+                        color: const Color(0xFF493Ad5),
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,
                       ),
@@ -450,7 +436,7 @@ class SignupView extends GetView<SignupController> {
                     TextSpan(
                       text: 'سياسة الخصوصية',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.primary,
+                        color: const Color(0xFF493Ad5),
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,
                       ),
@@ -487,6 +473,7 @@ class SignupView extends GetView<SignupController> {
                   child: SizedBox(
                     width: 24,
                     height: 24,
+
                     child: CircularProgressIndicator(
                       color: Colors.white,
                       strokeWidth: 2,
@@ -496,8 +483,6 @@ class SignupView extends GetView<SignupController> {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.person_add_alt_1, color: Colors.white),
-                    const SizedBox(width: 12),
                     Text(
                       'إنشاء حساب',
                       style: AppTextStyles.h4.copyWith(
@@ -514,24 +499,32 @@ class SignupView extends GetView<SignupController> {
 
   Widget _buildLoginLink() {
     return Center(
-      child: TextButton(
-        onPressed: controller.goToLogin,
-        child: Text.rich(
-          TextSpan(
-            text: 'لديك حساب بالفعل؟ ',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
-            children: [
+      child: AnimatedWidgets.bounceButton(
+        onTap: controller.goToLogin,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(width: 12),
+            Text.rich(
               TextSpan(
-                text: 'تسجيل الدخول',
+                text: 'لديك حساب بالفعل؟ ',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.primary,
+                  color: const Color(0xFF493Ad5),
                   fontWeight: FontWeight.bold,
                 ),
+                children: [
+                  TextSpan(
+                    text: 'سجل دخولك',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: const Color(0xFF493Ad5),
+
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

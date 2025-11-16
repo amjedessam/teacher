@@ -19,7 +19,6 @@ class AddQuestionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Initialize with 4 empty options
     options.value = ['', '', '', ''];
   }
 
@@ -58,7 +57,6 @@ class AddQuestionController extends GetxController {
       return;
     }
 
-    // Check if all options are filled
     if (options.any((opt) => opt.trim().isEmpty)) {
       Get.snackbar('خطأ', 'يرجى ملء جميع الخيارات');
       return;
@@ -66,7 +64,6 @@ class AddQuestionController extends GetxController {
 
     isLoading.value = true;
 
-    // Simulate API call
     await Future.delayed(const Duration(seconds: 2));
 
     isLoading.value = false;

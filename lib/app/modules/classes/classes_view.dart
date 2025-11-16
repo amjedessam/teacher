@@ -31,7 +31,6 @@ class ClassesView extends GetView<ClassesController> {
           onRefresh: controller.refreshClasses,
           child: Column(
             children: [
-              // Search Bar
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.all(16),
@@ -54,7 +53,6 @@ class ClassesView extends GetView<ClassesController> {
                 ),
               ),
 
-              // Classes List
               Expanded(
                 child: controller.filteredClasses.isEmpty
                     ? _buildEmptyState()
@@ -100,7 +98,6 @@ class ClassesView extends GetView<ClassesController> {
             children: [
               Row(
                 children: [
-                  // Icon
                   Container(
                     width: 50,
                     height: 50,
@@ -115,7 +112,7 @@ class ClassesView extends GetView<ClassesController> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16), // Class Info
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +127,6 @@ class ClassesView extends GetView<ClassesController> {
                     ),
                   ),
 
-                  // Average Score Badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -156,7 +152,6 @@ class ClassesView extends GetView<ClassesController> {
               const Divider(height: 1),
               const SizedBox(height: 16),
 
-              // Stats Row
               Row(
                 children: [
                   Expanded(

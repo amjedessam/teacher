@@ -22,7 +22,6 @@ class StudentDetailView extends GetView<StudentDetailController> {
         backgroundColor: AppColors.background,
         body: CustomScrollView(
           slivers: [
-            // App Bar with Student Header
             SliverAppBar(
               expandedHeight: 200,
               pinned: true,
@@ -36,7 +35,6 @@ class StudentDetailView extends GetView<StudentDetailController> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         const SizedBox(height: 50),
-                        // Avatar
                         Container(
                           width: 80,
                           height: 80,
@@ -70,7 +68,6 @@ class StudentDetailView extends GetView<StudentDetailController> {
                             color: Colors.white.withOpacity(0.9),
                           ),
                         ),
-                        // const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -78,13 +75,11 @@ class StudentDetailView extends GetView<StudentDetailController> {
               ),
             ),
 
-            // Stats Cards
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // Quick Stats
                     Row(
                       children: [
                         Expanded(
@@ -110,7 +105,6 @@ class StudentDetailView extends GetView<StudentDetailController> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Mastery Level Card
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -167,7 +161,6 @@ class StudentDetailView extends GetView<StudentDetailController> {
 
                     const SizedBox(height: 24),
 
-                    // Action Buttons
                     Row(
                       children: [
                         Expanded(
@@ -196,12 +189,10 @@ class StudentDetailView extends GetView<StudentDetailController> {
 
                     const SizedBox(height: 24),
 
-                    // Tabs
                     _buildTabs(),
 
                     const SizedBox(height: 16),
 
-                    // Tab Content
                     _buildTabContent(student),
                   ],
                 ),
@@ -481,7 +472,6 @@ class StudentDetailView extends GetView<StudentDetailController> {
         Text('تحليلات مفصلة', style: AppTextStyles.h4),
         const SizedBox(height: 16),
 
-        // Strengths
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -525,7 +515,6 @@ class StudentDetailView extends GetView<StudentDetailController> {
 
         const SizedBox(height: 16),
 
-        // Weaknesses
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(

@@ -37,7 +37,6 @@ class StudentsView extends GetView<StudentsController> {
           onRefresh: controller.refreshStudents,
           child: Column(
             children: [
-              // Search Bar
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.all(16),
@@ -56,7 +55,6 @@ class StudentsView extends GetView<StudentsController> {
                 ),
               ),
 
-              // Active Filters
               if (controller.selectedClassId.value != null ||
                   controller.selectedMasteryLevel.value != null)
                 Container(
@@ -101,7 +99,6 @@ class StudentsView extends GetView<StudentsController> {
                   ),
                 ),
 
-              // Students List
               Expanded(
                 child: controller.filteredStudents.isEmpty
                     ? _buildEmptyState()
@@ -159,7 +156,6 @@ class StudentsView extends GetView<StudentsController> {
               ),
               const SizedBox(width: 16),
 
-              // Student Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +200,7 @@ class StudentsView extends GetView<StudentsController> {
                     ),
                   ],
                 ),
-              ), // Score
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -284,7 +280,6 @@ class StudentsView extends GetView<StudentsController> {
 
             const SizedBox(height: 12),
 
-            // Filter by Mastery Level
             Text('مستوى الإتقان', style: AppTextStyles.labelBold),
             const SizedBox(height: 12),
             Obx(

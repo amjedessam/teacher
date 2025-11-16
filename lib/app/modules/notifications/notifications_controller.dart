@@ -1,4 +1,3 @@
-// notifications_controller.dart
 import 'package:get/get.dart';
 import '../../data/services/mock_data_service.dart';
 import '../../data/models/notification_model.dart';

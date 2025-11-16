@@ -31,7 +31,6 @@ class ClassReportView extends GetView<ClassReportController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Class Selector
             Obx(
               () => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -82,27 +81,22 @@ class ClassReportView extends GetView<ClassReportController> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Overview Stats
                   _buildOverviewStats(),
 
                   const SizedBox(height: 24),
 
-                  // Performance Distribution Chart
                   _buildDistributionChart(),
 
                   const SizedBox(height: 24),
 
-                  // Grade Distribution
                   _buildGradeDistribution(),
 
                   const SizedBox(height: 24),
 
-                  // Top Students
                   _buildTopStudents(),
 
                   const SizedBox(height: 24),
 
-                  // Struggling Students
                   if (controller.strugglingStudents.isNotEmpty)
                     _buildStrugglingStudents(),
                 ],
@@ -341,7 +335,6 @@ class ClassReportView extends GetView<ClassReportController> {
           Obx(() {
             if (controller.students.isEmpty) return const SizedBox();
 
-            // Group students into score ranges
             final ranges = {
               '90-100': controller.students
                   .where((s) => s.averageScore >= 90)
@@ -374,7 +367,6 @@ class ClassReportView extends GetView<ClassReportController> {
                     touchTooltipData: BarTouchTooltipData(
                       tooltipBgColor: AppColors.primary,
 
-                      // getTooltipColor: (group) => AppColors.primary,
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         return BarTooltipItem(
                           '${rod.toY.toInt()} طالب',

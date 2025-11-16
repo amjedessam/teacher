@@ -16,7 +16,6 @@ class SplashView extends GetView<SplashController> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo Icon
               Container(
                 width: 120,
                 height: 120,
@@ -38,7 +37,6 @@ class SplashView extends GetView<SplashController> {
 
               const SizedBox(height: 32),
 
-              // App Name
               Text(
                 "المعلم الذكي",
                 style: AppTextStyles.displayMedium.copyWith(
@@ -49,16 +47,8 @@ class SplashView extends GetView<SplashController> {
 
               const SizedBox(height: 8),
 
-              // Subtitle
-              // Text(
-              //   'نظام إدارة الاختبارات الذكي',
-              //   style: AppTextStyles.bodyLarge.copyWith(
-              //     color: Colors.white.withOpacity(0.9),
-              //   ),
-              // ),
               const SizedBox(height: 48),
 
-              // Loading Indicator
               const SizedBox(
                 width: 40,
                 height: 40,

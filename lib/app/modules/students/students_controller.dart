@@ -67,14 +67,12 @@ class StudentsController extends GetxController {
           .toList();
     }
 
-    // Class filter
     if (selectedClassId.value != null) {
       result = result
           .where((student) => student.classId == selectedClassId.value)
           .toList();
     }
 
-    // Mastery level filter
     if (selectedMasteryLevel.value != null) {
       result = result
           .where(

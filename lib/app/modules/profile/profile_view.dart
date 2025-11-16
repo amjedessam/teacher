@@ -14,7 +14,6 @@ class ProfileView extends GetView<ProfileController> {
       body: Obx(() {
         final teacher = controller.teacher.value;
 
-        // ✅ معالجة حالة عدم وجود بيانات
         if (teacher == null) {
           return const Center(
             child: Column(
@@ -30,7 +29,6 @@ class ProfileView extends GetView<ProfileController> {
 
         return CustomScrollView(
           slivers: [
-            // Profile Header
             SliverAppBar(
               expandedHeight: 220,
               pinned: true,
@@ -43,7 +41,7 @@ class ProfileView extends GetView<ProfileController> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const SizedBox(height: 60),
+                        const SizedBox(height: 35),
                         Container(
                           width: 100,
                           height: 100,
@@ -68,27 +66,23 @@ class ProfileView extends GetView<ProfileController> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 60),
-                          child: Row(
-                            children: [
-                              Text(
-                                ' ${teacher.name} :',
-                                style: AppTextStyles.h2.copyWith(
-                                  color: Colors.white,
-                                ),
+                        Column(
+                          children: [
+                            Text(
+                              ' ${teacher.name} :',
+                              style: AppTextStyles.h2.copyWith(
+                                color: Colors.white,
                               ),
-                              const SizedBox(width: 5),
-                              Text(
-                                teacher.subjects.isNotEmpty
-                                    ? 'معلم ${teacher.subjects.join(", ")}'
-                                    : 'معلم',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
+                            ),
+                            Text(
+                              teacher.subjects.isNotEmpty
+                                  ? 'معلم ${teacher.subjects.join(", ")}'
+                                  : 'معلم',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: Colors.white.withOpacity(0.9),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         const SizedBox(height: 20),
@@ -99,91 +93,12 @@ class ProfileView extends GetView<ProfileController> {
               ),
             ),
 
-            // Widget build(BuildContext context) {
-            //   return Scaffold(
-            //     backgroundColor: AppColors.background,
-            //     body: Obx(() {
-            //       final teacher = controller.teacher.value;
-            //       if (teacher == null) {
-            //         return const Center(child: CircularProgressIndicator());
-            //       }
-
-            //       return CustomScrollView(
-            //         slivers: [
-            //           // Profile Header
-            //           SliverAppBar(
-            //             expandedHeight: 220,
-            //             pinned: true,
-            //             flexibleSpace: FlexibleSpaceBar(
-            //               background: Container(
-            //                 decoration: const BoxDecoration(
-            //                   gradient: AppColors.primaryGradient,
-            //                 ),
-            //                 child: SafeArea(
-            //                   child: Column(
-            //                     mainAxisAlignment: MainAxisAlignment.end,
-            //                     children: [
-            //                       const SizedBox(height: 60),
-            //                       Container(
-            //                         width: 100,
-            //                         height: 100,
-            //                         decoration: BoxDecoration(
-            //                           color: Colors.white,
-            //                           borderRadius: BorderRadius.circular(25),
-            //                           boxShadow: [
-            //                             BoxShadow(
-            //                               color: Colors.black.withOpacity(0.2),
-            //                               blurRadius: 20,
-            //                               offset: const Offset(0, 10),
-            //                             ),
-            //                           ],
-            //                         ),
-            //                         child: Center(
-            //                           child: Text(
-            //                             teacher.profileImage,
-            //                             style: const TextStyle(fontSize: 50),
-            //                           ),
-            //                         ),
-            //                       ),
-            //                       const SizedBox(height: 4),
-            //                       Padding(
-            //                         padding: const EdgeInsets.only(right: 60),
-            //                         child: Row(
-            //                           children: [
-            //                             Text(
-            //                               ' ${teacher.name} :',
-            //                               style: AppTextStyles.h2.copyWith(
-            //                                 color: Colors.white,
-            //                               ),
-            //                             ),
-            //                             SizedBox(width: 5),
-            //                             Text(
-            //                               'معلم ${teacher.subjects.join(", ")}',
-            //                               style: AppTextStyles.bodyMedium.copyWith(
-            //                                 color: Colors.white.withOpacity(0.9),
-            //                               ),
-            //                             ),
-            //                           ],
-            //                         ),
-            //                       ),
-            //                       const SizedBox(height: 4),
-
-            //                       const SizedBox(height: 20),
-            //                     ],
-            //                   ),
-            //                 ),
-            //               ),
-            //             ),
-            //           ),
-
-            // Profile Content
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Stats Cards
                     Row(
                       children: [
                         Expanded(
@@ -215,7 +130,6 @@ class ProfileView extends GetView<ProfileController> {
 
                     const SizedBox(height: 24),
 
-                    // Personal Information
                     Text('المعلومات الشخصية', style: AppTextStyles.h4),
                     const SizedBox(height: 16),
                     _buildInfoCard(
@@ -241,7 +155,6 @@ class ProfileView extends GetView<ProfileController> {
 
                     const SizedBox(height: 24),
 
-                    // Settings & Actions
                     Text('الإعدادات', style: AppTextStyles.h4),
                     const SizedBox(height: 16),
                     _buildActionButton(
@@ -315,7 +228,6 @@ class ProfileView extends GetView<ProfileController> {
 
                     const SizedBox(height: 24),
 
-                    // Logout Button
                     SizedBox(
                       width: double.infinity,
                       height: 56,

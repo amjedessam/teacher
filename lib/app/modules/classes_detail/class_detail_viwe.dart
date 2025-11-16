@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:teacher/app/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import 'class_detail_controller.dart';
@@ -24,7 +25,6 @@ class ClassDetailView extends GetView<ClassDetailController> {
         backgroundColor: AppColors.background,
         body: CustomScrollView(
           slivers: [
-            // App Bar Header
             SliverAppBar(
               expandedHeight: 200,
               pinned: true,
@@ -83,13 +83,11 @@ class ClassDetailView extends GetView<ClassDetailController> {
               ),
             ),
 
-            // Content
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    // Stats Cards
                     Row(
                       children: [
                         Expanded(
@@ -125,7 +123,6 @@ class ClassDetailView extends GetView<ClassDetailController> {
 
                     const SizedBox(height: 24),
 
-                    // Action Buttons
                     Row(
                       children: [
                         Expanded(
@@ -152,14 +149,32 @@ class ClassDetailView extends GetView<ClassDetailController> {
                       ],
                     ),
 
+                    const SizedBox(height: 12),
+                    const SizedBox(height: 12),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Get.toNamed(
+                            AppRoutes.curriculumGaps,
+                            arguments: classItem,
+                          );
+                        },
+                        icon: const Icon(Icons.menu_book_outlined),
+                        label: const Text('الفجوات المنهجية'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: AppColors.primary,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 24),
 
-                    // Tabs
                     _buildTabs(),
 
                     const SizedBox(height: 16),
 
-                    // Tab Content
                     _buildTabContent(classItem, color),
                   ],
                 ),
@@ -424,7 +439,6 @@ class ClassDetailView extends GetView<ClassDetailController> {
         Text('إحصائيات الفصل', style: AppTextStyles.h4),
         const SizedBox(height: 16),
 
-        // Performance Distribution
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -451,7 +465,7 @@ class ClassDetailView extends GetView<ClassDetailController> {
           ),
         ),
 
-        const SizedBox(height: 16), // Quiz Statistics
+        const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(

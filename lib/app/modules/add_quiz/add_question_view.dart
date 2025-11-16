@@ -23,7 +23,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Question Text
               Text('نص السؤال', style: AppTextStyles.labelBold),
               const SizedBox(height: 12),
               TextFormField(
@@ -42,7 +41,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
 
               const SizedBox(height: 24),
 
-              // Chapter & Difficulty Row
               Row(
                 children: [
                   Expanded(
@@ -114,7 +112,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
 
               const SizedBox(height: 24),
 
-              // Options
               Text('الخيارات', style: AppTextStyles.labelBold),
               const SizedBox(height: 12),
               Obx(
@@ -140,7 +137,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
 
               const SizedBox(height: 24),
 
-              // Explanation
               Text('شرح الإجابة الصحيحة', style: AppTextStyles.labelBold),
               const SizedBox(height: 12),
               TextFormField(
@@ -153,7 +149,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
 
               const SizedBox(height: 32),
 
-              // Save Button
               Obx(
                 () => SizedBox(
                   width: double.infinity,
