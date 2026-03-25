@@ -527,68 +527,6 @@ class DailyReportView extends GetView<DailyReportController> {
     );
   }
 
-  // ── Level Slider Widget ──────────────────────────────────────────────────
-  // Widget _buildLevelSlider({
-  //   required String label,
-  //   required IconData icon,
-  //   required Color color,
-  //   required RxInt value,
-  // }) {
-  //   return Container(
-  //     padding: const EdgeInsets.all(16),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(12),
-  //       border: Border.all(color: AppColors.border),
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Row(
-  //           children: [
-  //             Icon(icon, color: color, size: 20),
-  //             const SizedBox(width: 8),
-  //             Text(label, style: AppTextStyles.bodyMedium),
-  //             const Spacer(),
-  //             Obx(
-  //               () => Text(
-  //                 '${value.value}/5',
-  //                 style: AppTextStyles.labelBold.copyWith(color: color),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //         const SizedBox(height: 12),
-  //         Obx(
-  //           () => Row(
-  //             children: List.generate(5, (i) {
-  //               final level = i + 1;
-  //               final isActive = level <= value.value;
-  //               return Expanded(
-  //                 child: GestureDetector(
-  //                   onTap: () => value.value = level,
-  //                   child: Container(
-  //                     margin: const EdgeInsets.symmetric(horizontal: 3),
-  //                     height: 8,
-  //                     decoration: BoxDecoration(
-  //                       color: isActive ? color : color.withOpacity(0.15),
-  //                       borderRadius: BorderRadius.circular(4),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               );
-  //             }),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  // ══════════════════════════════════════════════════════════════════
-  //  استبدل دالة _buildLevelSlider الحالية بهذه الدالة
-  //  تصميم احترافي: أزرار رقمية + label وصفي
-  // ══════════════════════════════════════════════════════════════════
-
   Widget _buildLevelSlider({
     required String label,
     required IconData icon,

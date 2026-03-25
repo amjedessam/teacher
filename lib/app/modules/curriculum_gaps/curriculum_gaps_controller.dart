@@ -1,12 +1,114 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../data/services/curriculum_gap_analysis_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../data/services/auth_service.dart';
+
+// ── Models ───────────────────────────────────────────────────
+
+class QuestionGap {
+  final int questionId;
+  final String questionText;
+  final String chapterName;
+  final String subjectName;
+  final int totalStudents;
+  final int failedStudents;
+  final double failureRate;
+
+  QuestionGap({
+    required this.questionId,
+    required this.questionText,
+    required this.chapterName,
+    required this.subjectName,
+    required this.totalStudents,
+    required this.failedStudents,
+    required this.failureRate,
+  });
+
+  factory QuestionGap.fromJson(Map<String, dynamic> json) => QuestionGap(
+    questionId: (json['question_id'] as num).toInt(),
+    questionText: json['question_text']?.toString() ?? '',
+    chapterName: json['chapter_name']?.toString() ?? '',
+    subjectName: json['subject_name']?.toString() ?? '',
+    totalStudents: (json['total_students'] as num?)?.toInt() ?? 0,
+    failedStudents: (json['failed_students'] as num?)?.toInt() ?? 0,
+    failureRate: (json['failure_rate'] as num?)?.toDouble() ?? 0,
+  );
+
+  GapSeverity get severity {
+    if (failureRate >= 60) return GapSeverity.critical;
+    if (failureRate >= 40) return GapSeverity.high;
+    if (failureRate >= 20) return GapSeverity.medium;
+    return GapSeverity.low;
+  }
+}
+
+class ChapterGap {
+  final String chapterName;
+  final String subjectName;
+  final List<QuestionGap> questions;
+
+  ChapterGap({
+    required this.chapterName,
+    required this.subjectName,
+    required this.questions,
+  });
+
+  double get avgFailureRate {
+    if (questions.isEmpty) return 0;
+    return questions.map((q) => q.failureRate).reduce((a, b) => a + b) /
+        questions.length;
+  }
+
+  int get weakQuestionsCount =>
+      questions.where((q) => q.failureRate >= 40).length;
+
+  GapSeverity get severity {
+    if (avgFailureRate >= 60) return GapSeverity.critical;
+    if (avgFailureRate >= 40) return GapSeverity.high;
+    if (avgFailureRate >= 20) return GapSeverity.medium;
+    return GapSeverity.low;
+  }
+
+  String get recommendation {
+    if (avgFailureRate >= 60) {
+      return 'خطورة عالية: يحتاج إعادة شرح الفصل بالكامل وتخصيص حصص دعم إضافية';
+    } else if (avgFailureRate >= 40) {
+      return 'يحتاج تدخل: مراجعة شاملة وإضافة تمارين تطبيقية مع دعم فردي للمتعثرين';
+    } else if (avgFailureRate >= 20) {
+      return 'يحتاج متابعة: مراجعة سريعة للنقاط الصعبة وواجبات إضافية للتقوية';
+    }
+    return 'أداء جيد في هذا الفصل';
+  }
+}
+
+enum GapSeverity { critical, high, medium, low }
+
+// ── Controller ───────────────────────────────────────────────
 
 class CurriculumGapsController extends GetxController {
-  final CurriculumGapAnalysisService _analysisService = Get.find();
+  final AuthService _authService = Get.find<AuthService>();
+  SupabaseClient get _client => Supabase.instance.client;
+  int get _teacherId => int.parse(_authService.currentUser.value!.id);
 
   final isLoading = true.obs;
-  final gaps = <CurriculumGap>[].obs;
-  final gapStats = <String, dynamic>{}.obs;
+  final questionGaps = <QuestionGap>[].obs;
+  final chapterGaps = <ChapterGap>[].obs;
+  final selectedSeverity = Rxn<GapSeverity>();
+
+  int get totalChapters => chapterGaps.length;
+  int get criticalCount =>
+      chapterGaps.where((c) => c.severity == GapSeverity.critical).length;
+  int get highCount =>
+      chapterGaps.where((c) => c.severity == GapSeverity.high).length;
+  int get totalWeakQuestions =>
+      questionGaps.where((q) => q.failureRate >= 40).length;
+
+  List<ChapterGap> get filteredChapterGaps {
+    if (selectedSeverity.value == null) return chapterGaps;
+    return chapterGaps
+        .where((c) => c.severity == selectedSeverity.value)
+        .toList();
+  }
 
   @override
   void onInit() {
@@ -17,24 +119,49 @@ class CurriculumGapsController extends GetxController {
   Future<void> loadGaps() async {
     try {
       isLoading.value = true;
-
-      final mockResults = _generateMockQuizResults();
-
-      final detectedGaps = await _analysisService.analyzeGapsForClass(
-        classId: 'C001',
-        quizResults: mockResults,
+      final res = await _client.rpc(
+        'get_curriculum_gaps_analysis',
+        params: {'p_teacher_id': _teacherId},
       );
-
-      gaps.value = detectedGaps;
-
-      final stats = await _analysisService.getGapStatistics(detectedGaps);
-      gapStats.value = stats;
+      if (res == null || (res as List).isEmpty) {
+        questionGaps.value = [];
+        chapterGaps.value = [];
+        return;
+      }
+      final gaps = (res as List)
+          .map((e) => QuestionGap.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+      questionGaps.value = gaps;
+      _groupByChapter(gaps);
     } catch (e) {
+      debugPrint('loadGaps error: $e');
       Get.snackbar('خطأ', 'فشل تحليل الفجوات المنهجية');
     } finally {
       isLoading.value = false;
     }
   }
+
+  void _groupByChapter(List<QuestionGap> gaps) {
+    final Map<String, List<QuestionGap>> map = {};
+    for (final q in gaps) {
+      final key = '${q.subjectName}:${q.chapterName}';
+      map[key] ??= [];
+      map[key]!.add(q);
+    }
+    final chapters = map.entries.map((e) {
+      final first = e.value.first;
+      return ChapterGap(
+        chapterName: first.chapterName,
+        subjectName: first.subjectName,
+        questions: e.value,
+      );
+    }).toList();
+    chapters.sort((a, b) => b.avgFailureRate.compareTo(a.avgFailureRate));
+    chapterGaps.value = chapters;
+  }
+
+  void filterBySeverity(GapSeverity? severity) =>
+      selectedSeverity.value = severity;
 
   Future<void> reanalyze() async {
     await loadGaps();
@@ -45,56 +172,29 @@ class CurriculumGapsController extends GetxController {
     );
   }
 
-  List<QuizResult> _generateMockQuizResults() {
-    final results = <QuizResult>[];
-
-    for (int i = 0; i < 30; i++) {
-      final studentId = 'S${i.toString().padLeft(3, '0')}';
-
-      results.add(
-        QuizResult(
-          studentId: studentId,
-          studentName: 'طالب $i',
-          quizId: 'QZ001',
-          unit: 'المعادلات الخطية',
-          chapter: 'الجبر',
-          score: 60 + (i % 10) * 4.0,
-          totalQuestions: 20,
-          correctAnswers: 12 + (i % 10),
-          completedAt: DateTime.now(),
-        ),
-      );
-
-      results.add(
-        QuizResult(
-          studentId: studentId,
-          studentName: 'طالب $i',
-          quizId: 'QZ002',
-          unit: 'المعادلات التربيعية',
-          chapter: 'الجبر',
-          score: i < 20 ? 45.0 : 75.0,
-
-          totalQuestions: 20,
-          correctAnswers: i < 20 ? 9 : 15,
-          completedAt: DateTime.now(),
-        ),
-      );
-
-      results.add(
-        QuizResult(
-          studentId: studentId,
-          studentName: 'طالب $i',
-          quizId: 'QZ003',
-          unit: 'حساب المثلثات الأساسي',
-          chapter: 'حساب المثلثات',
-          score: i < 14 ? 50.0 : 72.0,
-          totalQuestions: 20,
-          correctAnswers: i < 14 ? 10 : 14,
-          completedAt: DateTime.now(),
-        ),
-      );
+  Color getSeverityColor(GapSeverity severity) {
+    switch (severity) {
+      case GapSeverity.critical:
+        return const Color(0xFFF44336);
+      case GapSeverity.high:
+        return const Color(0xFFFF9800);
+      case GapSeverity.medium:
+        return const Color(0xFFFFEB3B);
+      case GapSeverity.low:
+        return const Color(0xFF4CAF50);
     }
+  }
 
-    return results;
+  String getSeverityLabel(GapSeverity severity) {
+    switch (severity) {
+      case GapSeverity.critical:
+        return 'حرج';
+      case GapSeverity.high:
+        return 'مرتفع';
+      case GapSeverity.medium:
+        return 'متوسط';
+      case GapSeverity.low:
+        return 'منخفض';
+    }
   }
 }

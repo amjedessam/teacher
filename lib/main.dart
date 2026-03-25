@@ -124,7 +124,6 @@ import 'app/routes/app_pages.dart';
 import 'app/data/services/storage_service.dart';
 import 'app/data/services/auth_service.dart';
 import 'app/data/services/question_analysis_service.dart';
-import 'app/data/services/curriculum_gap_analysis_service.dart';
 import 'app/data/repositories/question_repository.dart';
 import 'app/data/repositories/classes_repository.dart';
 import 'app/data/repositories/notifications_repository.dart';
@@ -197,11 +196,11 @@ Future<void> _initServices() async {
     return service;
   });
 
-  await Get.putAsync(() async {
-    final service = CurriculumGapAnalysisService();
-    print('✅ CurriculumGapAnalysisService initialized');
-    return service;
-  });
+  // await Get.putAsync(() async {
+  //   final service = CurriculumGapAnalysisService();
+  //   print('✅ CurriculumGapAnalysisService initialized');
+  //   return service;
+  // });
 
   print('🚀 All services initialized successfully!');
 }

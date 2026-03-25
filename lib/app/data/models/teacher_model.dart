@@ -1,65 +1,3 @@
-// class TeacherModel {
-//   final String id;
-//   final String name;
-//   final String email;
-//   final String phone;
-//   final String subject;
-//   final String employeeId;
-//   final String profileImage;
-//   final int totalStudents;
-//   final int totalClasses;
-//   final double averageScore;
-//   final DateTime joinedDate;
-
-//   TeacherModel({
-//     required this.id,
-//     required this.name,
-//     required this.email,
-//     required this.phone,
-//     required this.subject,
-//     required this.employeeId,
-//     required this.profileImage,
-//     required this.totalStudents,
-//     required this.totalClasses,
-//     required this.averageScore,
-//     required this.joinedDate,
-//   });
-
-//   factory TeacherModel.fromJson(Map<String, dynamic> json) {
-//     return TeacherModel(
-//       id: json['id'] ?? '',
-//       name: json['name'] ?? '',
-//       email: json['email'] ?? '',
-//       phone: json['phone'] ?? '',
-//       subject: json['subject'] ?? '',
-//       employeeId: json['employeeId'] ?? '',
-//       profileImage: json['profileImage'] ?? '',
-//       totalStudents: json['totalStudents'] ?? 0,
-//       totalClasses: json['totalClasses'] ?? 0,
-//       averageScore: (json['averageScore'] ?? 0).toDouble(),
-//       joinedDate: json['joinedDate'] != null
-//           ? DateTime.parse(json['joinedDate'])
-//           : DateTime.now(),
-//     );
-//   }
-
-//   Map<String, dynamic> toJson() {
-//     return {
-//       'id': id,
-//       'name': name,
-//       'email': email,
-//       'phone': phone,
-//       'subject': subject,
-//       'employeeId': employeeId,
-//       'profileImage': profileImage,
-//       'totalStudents': totalStudents,
-//       'totalClasses': totalClasses,
-//       'averageScore': averageScore,
-//       'joinedDate': joinedDate.toIso8601String(),
-//     };
-//   }
-// }
-
 class TeacherModel {
   final String id;
   final String name;
@@ -98,7 +36,8 @@ class TeacherModel {
       subjects: json['subjects'] != null
           ? List<String>.from(json['subjects'])
           : [],
-      employeeId: (json['employeeId'] ?? json['teacher_code']?.toString() ?? ''),
+      employeeId:
+          (json['employeeId'] ?? json['teacher_code']?.toString() ?? ''),
       school: json['school'],
       profileImage: json['profileImage'] ?? json['profile_image_url'] ?? '',
       totalStudents: json['totalStudents'] ?? 0,
@@ -106,8 +45,11 @@ class TeacherModel {
       averageScore: (json['averageScore'] ?? 0).toDouble(),
       joinedDate: json['joinedDate'] != null || json['created_at'] != null
           ? DateTime.tryParse(
-                  json['joinedDate']?.toString() ?? json['created_at']?.toString() ?? '') ??
-              DateTime.now()
+                  json['joinedDate']?.toString() ??
+                      json['created_at']?.toString() ??
+                      '',
+                ) ??
+                DateTime.now()
           : DateTime.now(),
     );
   }

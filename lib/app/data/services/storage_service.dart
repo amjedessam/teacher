@@ -12,11 +12,6 @@ class StorageService extends GetxService {
   static const String _isLoggedInKey = 'is_logged_in';
   static const String _sessionTokenKey = 'session_token';
 
-  // ✅ تم التعديل: إزالة دالة onInit بالكامل لأنها لم تعد ضرورية
-
-  // ==================== إدارة المستخدمين ====================
-
-  /// حفظ مستخدم جديد في قائمة المستخدمين المسجلين
   Future<bool> saveUser(TeacherModel user, String password) async {
     try {
       final users = getAllUsers();

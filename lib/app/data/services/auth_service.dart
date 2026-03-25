@@ -43,24 +43,6 @@ class AuthService extends GetxService {
     }
   }
 
-  // /// جلب بيانات المعلم من جدول teachers (RLS تسمح فقط بصف المعلم الحالي حسب JWT).
-  // Future<TeacherModel?> _fetchTeacherProfile() async {
-  //   try {
-  //     final res = await _client
-  //         .from('teachers')
-  //         .select('id, teacher_code, full_name, email, phone_number, profile_image_url, created_at')
-  //         .maybeSingle();
-  //     if (res == null) return null;
-  //     final teacher = TeacherModel.fromTeacherRow(res);
-  //     currentUser.value = teacher;
-  //     isAuthenticated.value = true;
-  //     return teacher;
-  //   } catch (_) {
-  //     currentUser.value = null;
-  //     isAuthenticated.value = false;
-  //     return null;
-  //   }
-  // }
   Future<TeacherModel?> _fetchTeacherProfile() async {
     try {
       // أولاً: جلب teacher_id من app_user عبر auth.uid()
