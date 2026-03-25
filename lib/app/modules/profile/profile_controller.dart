@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/repositories/classes_repository.dart';
 import '../../data/models/teacher_model.dart';
 import '../../routes/app_routes.dart';
 
 class ProfileController extends GetxController {
   final AuthService _authService = Get.find();
+  final ClassesRepository _classesRepo = Get.find<ClassesRepository>();
+  SupabaseClient get _client => Supabase.instance.client;
   final teacher = Rxn<TeacherModel>();
 
   @override
@@ -13,12 +17,49 @@ class ProfileController extends GetxController {
     super.onInit();
     ever(_authService.currentUser, (user) {
       teacher.value = user;
+      _loadStats();
     });
     loadProfile();
   }
 
   void loadProfile() {
     teacher.value = _authService.currentUser.value;
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    if (teacher.value == null) return;
+    try {
+      // جلب الفصول والطلاب
+      final classes = await _classesRepo.getAssignedClasses();
+      final totalClasses = classes.length;
+      final totalStudents = classes.fold<int>(0, (sum, c) => sum + c.totalStudents);
+
+      // جلب المعدل من RPC
+      double avgScore = 0;
+      try {
+        final teacherId = int.parse(teacher.value!.id);
+        final res = await _client.rpc(
+          'get_teacher_dashboard_stats',
+          params: {'p_teacher_id': teacherId},
+        );
+        if (res != null) {
+          final data = Map<String, dynamic>.from(res);
+          avgScore = (data['avg_score'] as num?)?.toDouble() ?? 0;
+        }
+      } catch (e) {
+        debugPrint('_loadStats RPC error: $e');
+      }
+
+      // تحديث بيانات المعلم
+      teacher.value = teacher.value!.copyWith(
+        totalStudents: totalStudents,
+        totalClasses: totalClasses,
+        averageScore: avgScore,
+      );
+    } catch (e) {
+      debugPrint('_loadStats error: $e');
+    }
   }
 
   void logout() {

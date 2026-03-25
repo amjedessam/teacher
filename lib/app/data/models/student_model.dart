@@ -71,6 +71,31 @@ class StudentModel {
       'lastActive': lastActive.toIso8601String(),
     };
   }
+
+  /// من صف جدول students في Supabase (مع اسم الصف إن وُجد).
+  factory StudentModel.fromStudentRow(
+    Map<String, dynamic> row, {
+    String? className,
+  }) {
+    final sectionId = row['section_id']?.toString();
+    return StudentModel(
+      id: (row['id']?.toString() ?? ''),
+      name: (row['full_name']?.toString() ?? ''),
+      email: (row['email']?.toString() ?? ''),
+      studentCode: (row['student_code']?.toString() ?? ''),
+      classId: sectionId ?? '',
+      className: className ?? '',
+      profileImage: (row['profile_image_url']?.toString() ?? ''),
+      averageScore: 0.0,
+      totalQuizzes: 0,
+      completedQuizzes: 0,
+      masteryLevel: 'Developing',
+      subjectPerformance: [],
+      lastActive: row['last_login_at'] != null
+          ? (DateTime.tryParse(row['last_login_at'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+    );
+  }
 }
 
 class SubjectPerformance {

@@ -1,146 +1,25 @@
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import '../../data/services/mock_data_service.dart';
-// import '../../data/models/question_model.dart';
-// import '../../routes/app_routes.dart';
-
-// class QuestionBankController extends GetxController {
-//   final mockDataService = MockDataService();
-
-//   final isLoading = true.obs;
-//   final questions = <QuestionModel>[].obs;
-//   final filteredQuestions = <QuestionModel>[].obs;
-
-//   final searchQuery = ''.obs;
-//   final selectedDifficulty = Rxn<String>();
-//   final selectedChapter = Rxn<String>();
-
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     loadQuestions();
-//   }
-
-//   Future<void> loadQuestions() async {
-//     isLoading.value = true;
-
-//     await Future.delayed(const Duration(milliseconds: 800));
-
-//     questions.value = mockDataService.getQuestions();
-//     filteredQuestions.value = questions;
-
-//     isLoading.value = false;
-//   }
-
-//   void searchQuestions(String query) {
-//     searchQuery.value = query;
-//     _applyFilters();
-//   }
-
-//   void filterByDifficulty(String? difficulty) {
-//     selectedDifficulty.value = difficulty;
-//     _applyFilters();
-//   }
-
-//   void filterByChapter(String? chapter) {
-//     selectedChapter.value = chapter;
-//     _applyFilters();
-//   }
-
-//   void _applyFilters() {
-//     var result = questions.toList();
-
-//     if (searchQuery.value.isNotEmpty) {
-//       result = result
-//           .where(
-//             (q) =>
-//                 q.questionText.toLowerCase().contains(
-//                   searchQuery.value.toLowerCase(),
-//                 ) ||
-//                 q.chapter.toLowerCase().contains(
-//                   searchQuery.value.toLowerCase(),
-//                 ),
-//           )
-//           .toList();
-//     }
-
-//     if (selectedDifficulty.value != null) {
-//       result = result
-//           .where((q) => q.difficulty == selectedDifficulty.value)
-//           .toList();
-//     }
-
-//     if (selectedChapter.value != null) {
-//       result = result.where((q) => q.chapter == selectedChapter.value).toList();
-//     }
-
-//     filteredQuestions.value = result;
-//   }
-
-//   void addNewQuestion() {
-//     Get.toNamed(AppRoutes.addQuestion);
-//   }
-
-//   void editQuestion(QuestionModel question) {
-//     Get.toNamed(AppRoutes.addQuestion, arguments: {'question': question});
-//   }
-
-//   void deleteQuestion(QuestionModel question) {
-//     Get.dialog(
-//       AlertDialog(
-//         title: const Text('حذف السؤال'),
-//         content: const Text('هل أنت متأكد من حذف هذا السؤال؟'),
-//         actions: [
-//           TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
-//           ElevatedButton(
-//             onPressed: () {
-//               questions.removeWhere((q) => q.id == question.id);
-//               _applyFilters();
-//               Get.back();
-//               Get.snackbar('نجاح', 'تم حذف السؤال بنجاح');
-//             },
-//             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-//             child: const Text('حذف'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   void viewQuestionQuality() {
-//     Get.toNamed(AppRoutes.questionQuality);
-//   }
-
-//   Future<void> refreshQuestions() async {
-//     await loadQuestions();
-//   }
-
-//   void clearFilters() {
-//     searchQuery.value = '';
-//     selectedDifficulty.value = null;
-//     selectedChapter.value = null;
-//     filteredQuestions.value = questions;
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/question_model.dart';
 import '../../data/repositories/question_repository.dart';
+import '../../data/services/auth_service.dart';
 import '../../routes/app_routes.dart';
 
 class QuestionBankController extends GetxController {
-  // ✅ استخدام Repository بدلاً من MockDataService
   final QuestionRepository _questionRepo = Get.find();
+  SupabaseClient get _client => Supabase.instance.client;
 
   final isLoading = true.obs;
   final questions = <QuestionModel>[].obs;
-
   final filteredQuestions = <QuestionModel>[].obs;
 
   final searchQuery = ''.obs;
   final selectedDifficulty = Rxn<String>();
-  final selectedChapter = Rxn<String>();
+  final selectedSubjectId = Rxn<String>(); // ✅ فلتر بالمادة بدلاً من الفصل
+
+  // قائمة المواد المتاحة للمعلم
+  final availableSubjects = <Map<String, String>>[].obs;
 
   @override
   void onInit() {
@@ -151,12 +30,20 @@ class QuestionBankController extends GetxController {
   Future<void> loadQuestions() async {
     try {
       isLoading.value = true;
-
-      // ✅ استخدام Repository
       final loadedQuestions = await _questionRepo.getQuestions();
-
       questions.value = loadedQuestions;
       filteredQuestions.value = loadedQuestions;
+
+      // استخراج المواد المتاحة من البيانات
+      final subjectsMap = <String, String>{};
+      for (final q in loadedQuestions) {
+        if (q.subjectId.isNotEmpty && q.subject.isNotEmpty) {
+          subjectsMap[q.subjectId] = q.subject;
+        }
+      }
+      availableSubjects.value = subjectsMap.entries
+          .map((e) => {'id': e.key, 'name': e.value})
+          .toList();
     } catch (e) {
       Get.snackbar(
         'خطأ',
@@ -179,69 +66,66 @@ class QuestionBankController extends GetxController {
     _applyFilters();
   }
 
-  void filterByChapter(String? chapter) {
-    selectedChapter.value = chapter;
-
+  void filterBySubject(String? subjectId) {
+    selectedSubjectId.value = subjectId;
     _applyFilters();
   }
 
-  Future<void> _applyFilters() async {
-    try {
-      // ✅ استخدام Repository مع الفلاتر
-      var result = await _questionRepo.getQuestions(
-        difficulty: selectedDifficulty.value,
-        chapter: selectedChapter.value,
-      );
+  void _applyFilters() {
+    var result = questions.toList();
 
-      // تطبيق فلتر البحث محلياً
-      if (searchQuery.value.isNotEmpty) {
-        result = result
-            .where(
-              (q) =>
-                  q.questionText.toLowerCase().contains(
-                    searchQuery.value.toLowerCase(),
-                  ) ||
-                  q.chapter.toLowerCase().contains(
-                    searchQuery.value.toLowerCase(),
-                  ),
-            )
-            .toList();
-      }
-
-      filteredQuestions.value = result;
-    } catch (e) {
-      Get.snackbar('خطأ', 'فشل تطبيق الفلاتر');
+    // فلتر البحث
+    if (searchQuery.value.isNotEmpty) {
+      result = result
+          .where(
+            (q) => q.questionText.toLowerCase().contains(
+              searchQuery.value.toLowerCase(),
+            ),
+          )
+          .toList();
     }
+
+    // فلتر المادة
+    if (selectedSubjectId.value != null) {
+      result = result
+          .where((q) => q.subjectId == selectedSubjectId.value)
+          .toList();
+    }
+
+    // فلتر الصعوبة
+    if (selectedDifficulty.value != null) {
+      result = result
+          .where((q) => q.difficulty == selectedDifficulty.value)
+          .toList();
+    }
+
+    filteredQuestions.value = result;
   }
 
-  void addNewQuestion() {
-    Get.toNamed(AppRoutes.addQuestion);
-  }
+  bool get hasActiveFilters =>
+      selectedSubjectId.value != null || selectedDifficulty.value != null;
 
-  void editQuestion(QuestionModel question) {
-    Get.toNamed(AppRoutes.addQuestion, arguments: {'question': question});
-  }
+  void addNewQuestion() => Get.toNamed(AppRoutes.addQuestion);
+
+  void editQuestion(QuestionModel question) =>
+      Get.toNamed(AppRoutes.addQuestion, arguments: {'question': question});
 
   void deleteQuestion(QuestionModel question) {
     Get.dialog(
       AlertDialog(
         title: const Text('حذف السؤال'),
         content: const Text('هل أنت متأكد من حذف هذا السؤال؟'),
-
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
           ElevatedButton(
             onPressed: () async {
               try {
-                // ✅ استخدام Repository
                 await _questionRepo.deleteQuestion(question.id);
-
                 questions.removeWhere((q) => q.id == question.id);
                 _applyFilters();
-
                 Get.back();
                 Get.snackbar(
-                  'نجح',
+                  'تم',
                   'تم حذف السؤال بنجاح',
                   backgroundColor: Colors.green.shade100,
                   colorText: Colors.green.shade900,
@@ -258,19 +142,54 @@ class QuestionBankController extends GetxController {
     );
   }
 
-  void viewQuestionQuality() {
-    Get.toNamed(AppRoutes.questionQuality);
-  }
-
-  Future<void> refreshQuestions() async {
-    await loadQuestions();
-  }
+  Future<void> refreshQuestions() async => loadQuestions();
 
   void clearFilters() {
     searchQuery.value = '';
-
     selectedDifficulty.value = null;
-    selectedChapter.value = null;
+    selectedSubjectId.value = null;
     filteredQuestions.value = questions;
+  }
+
+  String getDifficultyLabel(String difficulty) {
+    switch (difficulty) {
+      case 'easy':
+        return 'سهل';
+      case 'medium':
+        return 'متوسط';
+      case 'hard':
+        return 'صعب';
+      default:
+        return difficulty;
+    }
+  }
+
+  Color getDifficultyColor(String difficulty) {
+    switch (difficulty) {
+      case 'easy':
+        return const Color(0xFF4CAF50);
+      case 'medium':
+        return const Color(0xFFFF9800);
+      case 'hard':
+        return const Color(0xFFF44336);
+      default:
+        return const Color(0xFF9E9E9E);
+    }
+  }
+
+  String getTypeLabel(String type) {
+    switch (type) {
+      case 'mcq':
+      case 'multiple_choice':
+        return 'اختيار متعدد';
+      case 'true_false':
+        return 'صح / خطأ';
+      case 'essay':
+        return 'مقالي';
+      case 'fill_blank':
+        return 'فراغات';
+      default:
+        return type;
+    }
   }
 }

@@ -16,15 +16,15 @@
 //     Get.snackbar('قريباً', 'تقرير المادة قريباً');
 //   }
 
+//   // ✅ تم تحديث: يفتح الصفحة الفعلية بدلاً من Snackbar
 //   void openCurriculumGaps() {
-//     Get.snackbar('قريباً', 'تقرير الفجوات المنهجية قريباً');
+//     Get.toNamed(AppRoutes.curriculumGaps);
 //   }
 
 //   void openStrugglingStudents() {
 //     Get.snackbar('قريباً', 'تقرير الطلاب المتعثرين قريباً');
 //   }
 // }
-
 import 'package:get/get.dart';
 import '../../routes/app_routes.dart';
 
@@ -43,12 +43,17 @@ class ReportsController extends GetxController {
     Get.snackbar('قريباً', 'تقرير المادة قريباً');
   }
 
-  // ✅ تم تحديث: يفتح الصفحة الفعلية بدلاً من Snackbar
   void openCurriculumGaps() {
     Get.toNamed(AppRoutes.curriculumGaps);
   }
 
-  void openStrugglingStudents() {
-    Get.snackbar('قريباً', 'تقرير الطلاب المتعثرين قريباً');
+  // ✅ الخلاصة اليومية + النشاط/الواجب
+  void openDailyReport() {
+    Get.toNamed(AppRoutes.dailyReport);
+  }
+
+  // ✅ ملاحظة لطالب معين — تُفتح من تفاصيل الطالب مباشرة
+  void openStudentNote() {
+    Get.snackbar('تنبيه', 'افتح من تفاصيل الطالب مباشرة');
   }
 }

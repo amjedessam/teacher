@@ -19,15 +19,32 @@ class NotificationModel {
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      id: json['id'] ?? '',
+      id: (json['id']?.toString() ?? ''),
       title: json['title'] ?? '',
       message: json['message'] ?? '',
       type: json['type'] ?? 'system',
       isRead: json['isRead'] ?? false,
       timestamp: json['timestamp'] != null
-          ? DateTime.parse(json['timestamp'])
+          ? DateTime.parse(json['timestamp'].toString())
           : DateTime.now(),
       data: json['data'] as Map<String, dynamic>?,
+    );
+  }
+
+  /// من صف جدول notifications في Supabase.
+  factory NotificationModel.fromNotificationRow(Map<String, dynamic> row) {
+    return NotificationModel(
+      id: (row['id']?.toString() ?? ''),
+      title: (row['title']?.toString() ?? ''),
+      message: (row['message']?.toString() ?? ''),
+      type: (row['notification_type']?.toString() ?? 'system'),
+      isRead: row['is_read'] == true,
+      timestamp: row['created_at'] != null
+          ? (DateTime.tryParse(row['created_at'].toString()) ?? DateTime.now())
+          : DateTime.now(),
+      data: row['metadata'] != null
+          ? Map<String, dynamic>.from(row['metadata'] as Map)
+          : null,
     );
   }
 

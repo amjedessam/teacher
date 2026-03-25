@@ -1,108 +1,178 @@
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/teacher_model.dart';
-import 'storage_service.dart';
 
+/// خدمة المصادقة عبر Supabase Auth.
+/// المدير ينشئ حسابات المعلمين في Supabase Auth وربطها في app_user + teachers.
+/// المعلم يسجل الدخول بالبريد وكلمة المرور → JWT → RLS تسمح بالوصول للبيانات المصرح بها فقط.
 class AuthService extends GetxService {
-  final StorageService _storageService = Get.find();
+  SupabaseClient get _client => Supabase.instance.client;
 
-  // المستخدم الحالي (Reactive)
   final Rx<TeacherModel?> currentUser = Rx<TeacherModel?>(null);
   final RxBool isAuthenticated = false.obs;
+
+  /// استدعاؤه من الشاشة الابتدائية لضمان انتهاء تحميل الجلسة قبل تحديد المسار.
+  Future<void> ensureSessionLoaded() async {
+    await _loadSession();
+  }
 
   @override
   void onInit() {
     super.onInit();
-    _loadCurrentUser();
+    _loadSession();
+    _client.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      if (session != null) {
+        _fetchTeacherProfile();
+      } else {
+        currentUser.value = null;
+        isAuthenticated.value = false;
+      }
+    });
   }
 
-  /// تحميل المستخدم الحالي من التخزين
-  void _loadCurrentUser() {
-    if (_storageService.isLoggedIn) {
-      currentUser.value = _storageService.getCurrentUser();
-      isAuthenticated.value = currentUser.value != null;
+  /// استعادة الجلسة من Supabase وحمل بيانات المعلم إن وُجدت.
+  Future<void> _loadSession() async {
+    final session = _client.auth.currentSession;
+    if (session != null) {
+      await _fetchTeacherProfile();
+    } else {
+      currentUser.value = null;
+      isAuthenticated.value = false;
     }
   }
 
-  /// تسجيل الدخول
-  Future<LoginResult> login(String email, String password) async {
+  // /// جلب بيانات المعلم من جدول teachers (RLS تسمح فقط بصف المعلم الحالي حسب JWT).
+  // Future<TeacherModel?> _fetchTeacherProfile() async {
+  //   try {
+  //     final res = await _client
+  //         .from('teachers')
+  //         .select('id, teacher_code, full_name, email, phone_number, profile_image_url, created_at')
+  //         .maybeSingle();
+  //     if (res == null) return null;
+  //     final teacher = TeacherModel.fromTeacherRow(res);
+  //     currentUser.value = teacher;
+  //     isAuthenticated.value = true;
+  //     return teacher;
+  //   } catch (_) {
+  //     currentUser.value = null;
+  //     isAuthenticated.value = false;
+  //     return null;
+  //   }
+  // }
+  Future<TeacherModel?> _fetchTeacherProfile() async {
     try {
-      // التحقق من صحة البيانات
-      final user = _storageService.validateCredentials(email, password);
+      // أولاً: جلب teacher_id من app_user عبر auth.uid()
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return null;
 
-      if (user == null) {
-        return LoginResult(
-          success: false,
-          message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
-        );
+      // جلب app_entity_id من app_user
+      final appUserRes = await _client
+          .from('app_user')
+          .select('app_entity_id, user_type')
+          .eq('auth_user_id', userId)
+          .maybeSingle();
+
+      if (appUserRes == null || appUserRes['user_type'] != 'teacher') {
+        return null;
       }
 
-      // حفظ الجلسة
-      await _storageService.saveCurrentUser(user);
-      currentUser.value = user;
-      isAuthenticated.value = true;
+      final teacherId = appUserRes['app_entity_id'] as int;
 
+      // جلب بيانات المعلم بـ id صريح
+      final res = await _client
+          .from('teachers')
+          .select(
+            'id, teacher_code, full_name, email, phone_number, profile_image_url, created_at',
+          )
+          .eq('id', teacherId)
+          .maybeSingle();
+
+      if (res == null) return null;
+
+      final teacher = TeacherModel.fromTeacherRow(res);
+      currentUser.value = teacher;
+      isAuthenticated.value = true;
+      return teacher;
+    } catch (e) {
+      currentUser.value = null;
+      isAuthenticated.value = false;
+      return null;
+    }
+  }
+
+  /// تسجيل الدخول بالبريد وكلمة المرور (Supabase Auth يتحقق ويعطي JWT).
+  Future<LoginResult> login(String email, String password) async {
+    try {
+      await _client.auth.signInWithPassword(
+        email: email.trim(),
+        password: password,
+      );
+      final teacher = await _fetchTeacherProfile();
+      if (teacher == null) {
+        await _client.auth.signOut();
+        return LoginResult(
+          success: false,
+          message: 'لم يتم العثور على بيانات المعلم. تواصل مع الإدارة.',
+        );
+      }
       return LoginResult(
         success: true,
         message: 'تم تسجيل الدخول بنجاح',
-        user: user,
-      );
-    } catch (e) {
-      return LoginResult(success: false, message: 'حدث خطأ أثناء تسجيل الدخول');
-    }
-  }
-
-  /// التسجيل
-  Future<SignupResult> signup({
-    required TeacherModel teacher,
-    required String password,
-  }) async {
-    try {
-      // حفظ المستخدم الجديد
-      final saved = await _storageService.saveUser(teacher, password);
-
-      if (!saved) {
-        return SignupResult(
-          success: false,
-          message: 'البريد الإلكتروني مستخدم مسبقاً',
-        );
-      }
-
-      // تسجيل دخول تلقائي
-      await _storageService.saveCurrentUser(teacher);
-      currentUser.value = teacher;
-      isAuthenticated.value = true;
-
-      return SignupResult(
-        success: true,
-        message: 'تم إنشاء الحساب بنجاح',
         user: teacher,
       );
+    } on AuthException catch (e) {
+      final msg = _authErrorMessage(e.message);
+      return LoginResult(success: false, message: msg);
     } catch (e) {
-      return SignupResult(
+      return LoginResult(
         success: false,
-        message: 'حدث خطأ أثناء إنشاء الحساب',
+        message: 'حدث خطأ أثناء تسجيل الدخول. تحقق من الاتصال.',
       );
     }
   }
 
-  /// تسجيل الخروج
+  String _authErrorMessage(String message) {
+    if (message.contains('Invalid login credentials') ||
+        message.contains('invalid_credentials')) {
+      return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+    }
+    if (message.contains('Email not confirmed')) {
+      return 'يرجى تأكيد البريد الإلكتروني أولاً';
+    }
+    return message;
+  }
+
+  /// تسجيل الخروج (إنهاء الجلسة المحفوظة في Supabase).
   Future<void> logout() async {
-    await _storageService.logout();
+    await _client.auth.signOut();
     currentUser.value = null;
     isAuthenticated.value = false;
   }
 
-  /// تحديث معلومات المستخدم
+  /// تحديث بيانات المعلم في جدول teachers (RLS تسمح للمعلم بتحديث بياناته فقط).
   Future<bool> updateUser(TeacherModel updatedUser) async {
-    final result = await _storageService.updateCurrentUser(updatedUser);
-    if (result) {
+    try {
+      await _client
+          .from('teachers')
+          .update({
+            'full_name': updatedUser.name,
+            'email': updatedUser.email,
+            'phone_number': updatedUser.phone,
+            'profile_image_url': updatedUser.profileImage.isNotEmpty
+                ? updatedUser.profileImage
+                : null,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', int.tryParse(updatedUser.id) ?? 0);
       currentUser.value = updatedUser;
+      return true;
+    } catch (_) {
+      return false;
     }
-    return result;
   }
 }
-
-// ==================== Result Classes ====================
 
 class LoginResult {
   final bool success;
@@ -110,12 +180,4 @@ class LoginResult {
   final TeacherModel? user;
 
   LoginResult({required this.success, required this.message, this.user});
-}
-
-class SignupResult {
-  final bool success;
-  final String message;
-  final TeacherModel? user;
-
-  SignupResult({required this.success, required this.message, this.user});
 }

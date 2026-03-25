@@ -9,437 +9,485 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('بناء اختبار', style: AppTextStyles.h3),
-        backgroundColor: Colors.white,
-        elevation: 0,
+    return Obx(
+      () => Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: controller.goBack,
+          ),
+          title: Text(_stepTitle(), style: AppTextStyles.h3),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(4),
+            child: _buildStepIndicator(),
+          ),
+        ),
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: _buildCurrentStep(),
+        ),
       ),
-      body: Obx(() {
-        if (controller.isPreviewMode.value) {
-          return _buildPreviewMode();
-        }
-        return _buildBuilderMode();
-      }),
     );
   }
 
-  Widget _buildBuilderMode() {
-    return Form(
-      key: controller.formKey,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.info.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.info.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: AppColors.info),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'قم ببناء اختبار مخصص للطلاب مع اختيار نسب الصعوبة',
-                      style: AppTextStyles.bodySmall,
+  String _stepTitle() {
+    switch (controller.currentStep.value) {
+      case 0:
+        return controller.isStudentMode
+            ? 'اختبار فردي — الإعدادات'
+            : 'إعدادات الاختبار';
+      case 1:
+        return 'اختيار الأسئلة';
+      case 2:
+        return 'مراجعة وإنشاء';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildStepIndicator() {
+    return Row(
+      children: List.generate(
+        3,
+        (i) => Expanded(
+          child: Container(
+            height: 4,
+            color: i <= controller.currentStep.value
+                ? AppColors.primary
+                : AppColors.border,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentStep() {
+    switch (controller.currentStep.value) {
+      case 0:
+        return _buildStep0();
+      case 1:
+        return _buildStep1();
+      case 2:
+        return _buildStep2();
+      default:
+        return const SizedBox();
+    }
+  }
+
+  // ── Step 0: إعدادات الاختبار ─────────────────────────────────────────────
+  Widget _buildStep0() {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      return Form(
+        key: controller.formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── بانر وضع الطالب الفردي ────────────────────────────────────
+              if (controller.isStudentMode) ...[
+                Obx(
+                  () => Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            Text('الفصل الدراسي', style: AppTextStyles.labelBold),
-            const SizedBox(height: 12),
-            Obx(
-              () => DropdownButtonFormField<String>(
-                value: controller.selectedClassId.value,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.class_),
-                ),
-                items: controller.classes
-                    .map(
-                      (classItem) => DropdownMenuItem(
-                        value: classItem.id,
-                        child: Text(classItem.name),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  controller.selectedClassId.value = value;
-                },
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('الفصل', style: AppTextStyles.labelBold),
-                      const SizedBox(height: 12),
-
-                      Obx(
-                        () => DropdownButtonFormField<String>(
-                          value: controller.selectedChapter.value,
-                          decoration: const InputDecoration(),
-                          isExpanded: true,
-                          items: ['الجبر', 'الهندسة', 'حساب المثلثات']
-                              .map(
-                                (chapter) => DropdownMenuItem(
-                                  value: chapter,
-                                  child: Text(
-                                    chapter,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              controller.selectedChapter.value = value;
-                            }
-                          },
-                        ),
-                      ),
-
-                      SizedBox(height: 5),
-                      Obx(
-                        () => DropdownButtonFormField<String>(
-                          value: controller.selectedUnit.value,
-                          decoration: const InputDecoration(),
-                          isExpanded: true,
-                          items:
-                              [
-                                    'المعادلات الخطية',
-                                    'المعادلات التربيعية',
-                                    'المتتاليات',
-                                  ]
-                                  .map(
-                                    (unit) => DropdownMenuItem(
-                                      value: unit,
-                                      child: Text(
-                                        unit,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              controller.selectedUnit.value = value;
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            Text('عدد الأسئلة', style: AppTextStyles.labelBold),
-            const SizedBox(height: 12),
-            Obx(
-              () => Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
                       children: [
-                        Text('عدد الأسئلة:', style: AppTextStyles.bodyMedium),
-                        Text(
-                          '${controller.questionCount.value}',
-                          style: AppTextStyles.h3.copyWith(
-                            color: AppColors.primary,
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.person_pin_outlined,
+                            color: Colors.blue.shade700,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'اختبار فردي',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'سيُرسَل هذا الاختبار إلى: ${controller.targetStudentName.value}',
+                                style: TextStyle(
+                                  color: Colors.blue.shade600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    Slider(
-                      value: controller.questionCount.value.toDouble(),
-                      min: 5,
-                      max: 50,
-                      divisions: 9,
-                      label: '${controller.questionCount.value}',
-                      onChanged: controller.updateQuestionCount,
-                    ),
-                  ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // عنوان الاختبار
+              Text('عنوان الاختبار', style: AppTextStyles.labelBold),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: controller.titleController,
+                decoration: const InputDecoration(
+                  hintText: 'مثال: اختبار الوحدة الأولى',
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'يرجى إدخال عنوان' : null,
+              ),
+
+              const SizedBox(height: 20),
+
+              // الوصف
+              Text('الوصف (اختياري)', style: AppTextStyles.labelBold),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: controller.descriptionController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  hintText: 'وصف مختصر للاختبار...',
                 ),
               ),
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-            Text('توزيع الصعوبة', style: AppTextStyles.labelBold),
-            const SizedBox(height: 12),
-
-            _buildDifficultySlider(
-              label: 'سهل',
-              color: AppColors.success,
-              value: controller.easyPercentage,
-              onChanged: controller.updateEasyPercentage,
-            ),
-
-            const SizedBox(height: 16),
-
-            _buildDifficultySlider(
-              label: 'متوسط',
-              color: AppColors.warning,
-              value: controller.mediumPercentage,
-              onChanged: controller.updateMediumPercentage,
-            ),
-
-            const SizedBox(height: 16),
-
-            _buildDifficultySlider(
-              label: 'صعب',
-              color: AppColors.error,
-              value: controller.hardPercentage,
-              onChanged: controller.updateHardPercentage,
-            ),
-
-            const SizedBox(height: 24),
-
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+              // المادة
+              Text('المادة', style: AppTextStyles.labelBold),
+              const SizedBox(height: 8),
+              Obx(
+                () => DropdownButtonFormField<int>(
+                  value: controller.selectedSubjectId.value,
+                  decoration: const InputDecoration(),
+                  hint: const Text('اختر المادة'),
+                  items: controller.subjects
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c.subjectId,
+                          child: Text(c.subject),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (v) => controller.selectedSubjectId.value = v,
+                  validator: (v) => v == null ? 'يرجى اختيار المادة' : null,
+                ),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    'ملخص الاختبار',
-                    style: AppTextStyles.h4.copyWith(color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Obx(
-                        () => _buildSummaryItem(
-                          '${((controller.questionCount.value * controller.easyPercentage.value) / 100).round()}',
-                          'سهل',
-                        ),
-                      ),
-                      Container(width: 1, height: 40, color: Colors.white30),
-                      Obx(
-                        () => _buildSummaryItem(
-                          '${((controller.questionCount.value * controller.mediumPercentage.value) / 100).round()}',
-                          'متوسط',
-                        ),
-                      ),
-                      Container(width: 1, height: 40, color: Colors.white30),
-                      Obx(
-                        () => _buildSummaryItem(
-                          '${((controller.questionCount.value * controller.hardPercentage.value) / 100).round()}',
-                          'صعب',
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: 32),
+              const SizedBox(height: 20),
 
-            Obx(
-              () => SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: controller.isGenerating.value
-                      ? null
-                      : controller.generateQuiz,
-                  icon: controller.isGenerating.value
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+              // القسم — يُخفى في وضع الطالب الفردي لأنه مُحدد تلقائياً
+              if (!controller.isStudentMode) ...[
+                Text('القسم', style: AppTextStyles.labelBold),
+                const SizedBox(height: 8),
+                Obx(() {
+                  if (controller.sections.isEmpty) {
+                    return _loadingDropdown('اختر المادة أولاً');
+                  }
+                  return DropdownButtonFormField<int>(
+                    value: controller.selectedSectionId.value,
+                    decoration: const InputDecoration(),
+                    hint: const Text('اختر القسم'),
+                    items: controller.sections
+                        .map(
+                          (s) => DropdownMenuItem(
+                            value: s.id,
+                            child: Text(s.name),
                           ),
                         )
-                      : const Icon(Icons.auto_awesome),
-                  label: Text(
-                    controller.isGenerating.value
-                        ? 'جاري توليد الاختبار...'
-                        : 'توليد الاختبار',
-                  ),
+                        .toList(),
+                    onChanged: (v) => controller.selectedSectionId.value = v,
+                    validator: (v) => v == null ? 'يرجى اختيار القسم' : null,
+                  );
+                }),
+                const SizedBox(height: 20),
+              ],
+
+              // فلتر الوحدة (اختياري)
+              Text('تصفية حسب الفصل (اختياري)', style: AppTextStyles.labelBold),
+              const SizedBox(height: 8),
+              Obx(() {
+                if (controller.chapters.isEmpty) {
+                  return _loadingDropdown('جارٍ التحميل...');
+                }
+                return DropdownButtonFormField<int?>(
+                  value: controller.selectedChapterId.value,
+                  decoration: const InputDecoration(),
+                  hint: const Text('كل الفصول'),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('كل الفصول'),
+                    ),
+                    ...controller.chapters.map(
+                      (ch) =>
+                          DropdownMenuItem(value: ch.id, child: Text(ch.name)),
+                    ),
+                  ],
+                  onChanged: (v) => controller.selectedChapterId.value = v,
+                );
+              }),
+
+              const SizedBox(height: 20),
+
+              // الصعوبة (اختياري)
+              Text('مستوى الصعوبة (اختياري)', style: AppTextStyles.labelBold),
+              const SizedBox(height: 8),
+              Obx(
+                () => DropdownButtonFormField<String?>(
+                  value: controller.selectedDifficulty.value,
+                  decoration: const InputDecoration(),
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('كل المستويات')),
+                    DropdownMenuItem(value: 'easy', child: Text('سهل')),
+                    DropdownMenuItem(value: 'medium', child: Text('متوسط')),
+                    DropdownMenuItem(value: 'hard', child: Text('صعب')),
+                  ],
+                  onChanged: (v) => controller.selectedDifficulty.value = v,
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildDifficultySlider({
-    required String label,
-    required Color color,
-    required RxInt value,
-    required Function(double) onChanged,
-  }) {
-    return Obx(
-      () => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(label, style: AppTextStyles.bodyMedium),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${value.value}%',
-                    style: AppTextStyles.labelBold.copyWith(color: color),
-                  ),
-                ),
-              ],
-            ),
-            Slider(
-              value: value.value.toDouble(),
-              min: 0,
-              max: 100,
-              divisions: 20,
-              activeColor: color,
-              onChanged: onChanged,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              const SizedBox(height: 20),
 
-  Widget _buildSummaryItem(String value, String label) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: AppTextStyles.h2.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: Colors.white.withOpacity(0.9),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPreviewMode() {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(bottom: BorderSide(color: AppColors.border)),
-          ),
-          child: Column(
-            children: [
+              // المدة + درجة النجاح
               Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('معاينة الاختبار', style: AppTextStyles.h4),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${controller.generatedQuestions.length} سؤال',
-                          style: AppTextStyles.bodySmall,
+                        Text('المدة (دقيقة)', style: AppTextStyles.labelBold),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: controller.durationController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            suffixText: 'دقيقة',
+                          ),
+                          validator: (v) =>
+                              (v == null || int.tryParse(v) == null)
+                              ? 'رقم صحيح فقط'
+                              : null,
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: controller.backToBuilder,
-                    icon: const Icon(Icons.edit_outlined),
-                    tooltip: 'تعديل',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: controller.exportToPDF,
-                      icon: const Icon(Icons.picture_as_pdf_outlined),
-                      label: const Text('تصدير PDF'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: controller.sendToStudents,
-                      icon: const Icon(Icons.send),
-                      label: const Text('إرسال للطلاب'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('درجة النجاح %', style: AppTextStyles.labelBold),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: controller.passingMarksController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(suffixText: '%'),
+                          validator: (v) =>
+                              (v == null || int.tryParse(v) == null)
+                              ? 'رقم صحيح فقط'
+                              : null,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+
+              const SizedBox(height: 20),
+
+              Text('الفصل الدراسي', style: AppTextStyles.labelBold),
+              const SizedBox(height: 8),
+              Obx(
+                () => DropdownButtonFormField<int>(
+                  value: controller.selectedSemesterId.value,
+                  decoration: const InputDecoration(),
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text('الفصل الأول')),
+                    DropdownMenuItem(value: 2, child: Text('الفصل الثاني')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) controller.selectedSemesterId.value = v;
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 32),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: controller.isLoadingQuestions.value
+                        ? null
+                        : controller.goToSelectQuestions,
+                    icon: controller.isLoadingQuestions.value
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.arrow_forward),
+                    label: const Text('التالي: اختيار الأسئلة'),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
             ],
           ),
         ),
+      );
+    });
+  }
 
+  // ── Step 1: اختيار الأسئلة ───────────────────────────────────────────────
+  Widget _buildStep1() {
+    return Column(
+      children: [
+        // شريط الإحصاء
+        Obx(
+          () => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            color: Colors.white,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${controller.allQuestions.length} سؤال متاح',
+                  style: AppTextStyles.bodyMedium,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'تم اختيار ${controller.selectedQuestionIds.length}',
+                    style: AppTextStyles.labelBold.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // قائمة الأسئلة
         Expanded(
           child: Obx(
             () => ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: controller.generatedQuestions.length,
+              itemCount: controller.allQuestions.length,
               itemBuilder: (context, index) {
-                final question = controller.generatedQuestions[index];
-                return _buildQuestionPreviewCard(question, index + 1);
+                final q = controller.allQuestions[index];
+                return _buildQuestionCard(q);
               },
+            ),
+          ),
+        ),
+
+        // ✅ الأزرار في الأسفل - جنباً إلى جنب
+        Obx(
+          () => Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // ── زر سؤال جديد ────────────────────────
+                Expanded(
+                  flex: 2,
+                  child: OutlinedButton.icon(
+                    onPressed: controller.addNewQuestion,
+                    icon: const Icon(Icons.add, size: 20),
+                    label: const Text(
+                      'سؤال جديد',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: AppColors.primary, width: 1.5),
+                      foregroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // ── زر المراجعة ────────────────────────
+                Expanded(
+                  flex: 3,
+                  child: ElevatedButton.icon(
+                    onPressed: controller.selectedQuestionIds.isEmpty
+                        ? null
+                        : controller.goToReview,
+                    icon: const Icon(Icons.arrow_forward, size: 20),
+                    label: Text(
+                      'مراجعة (${controller.selectedQuestionIds.length})',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      disabledBackgroundColor: AppColors.border,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -447,153 +495,345 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
     );
   }
 
-  Widget _buildQuestionPreviewCard(question, int number) {
-    final difficultyColor = _getDifficultyColor(question.difficulty);
-
-    const List<String> optionLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: difficultyColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
+  Widget _buildQuestionCard(q) {
+    return Obx(() {
+      final selected = controller.isSelected(q.id);
+      return GestureDetector(
+        onTap: () => controller.toggleQuestion(q.id),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.primary.withOpacity(0.05)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.border,
+              width: selected ? 2 : 1,
             ),
-            child: Row(
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Checkbox
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: selected ? AppColors.primary : AppColors.border,
+                    width: 2,
+                  ),
+                ),
+                child: selected
+                    ? const Icon(Icons.check, color: Colors.white, size: 16)
+                    : null,
+              ),
+              const SizedBox(width: 12),
+
+              // نص السؤال + بادجات
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      q.questionText,
+                      style: AppTextStyles.bodyMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _badge(
+                          controller.difficultyLabel(q.difficulty),
+                          controller.difficultyColor(q.difficulty),
+                        ),
+                        const SizedBox(width: 8),
+                        _badge(
+                          q.questionType == 'mcq' ? 'اختيار متعدد' : 'صح/خطأ',
+                          AppColors.info,
+                        ),
+                        if (q.chapter.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          _badge(q.chapter, AppColors.textSecondary),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // ── Step 2: مراجعة وإنشاء ────────────────────────────────────────────────
+  Widget _buildStep2() {
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: difficultyColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '$number',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                _buildSummaryCard(),
+                const SizedBox(height: 20),
+
+                Text(
+                  'الأسئلة المختارة (${controller.selectedQuestions.length})',
+                  style: AppTextStyles.h4,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    question.questionText,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: difficultyColor,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    _getDifficultyLabel(question.difficulty),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                const SizedBox(height: 12),
+
+                ...controller.selectedQuestions.asMap().entries.map(
+                  (entry) =>
+                      _buildReviewQuestionItem(entry.key + 1, entry.value),
                 ),
               ],
             ),
           ),
+        ),
 
-          Padding(
+        // زر الإنشاء
+        Obx(
+          () => Container(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              children: question.options.asMap().entries.map<Widget>((entry) {
-                final index = entry.key;
-                final option = entry.value;
+            color: Colors.white,
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: controller.isSaving.value
+                    ? null
+                    : controller.saveExam,
+                icon: controller.isSaving.value
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.check_circle_outline),
+                label: Text(
+                  controller.isSaving.value
+                      ? 'جارٍ الإنشاء...'
+                      : controller.isStudentMode
+                      ? 'إنشاء وإرسال إلى ${controller.targetStudentName.value}'
+                      : 'إنشاء الاختبار للفصل',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: controller.isStudentMode
+                      ? Colors.blue.shade600
+                      : AppColors.success,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-                final letter = (index < optionLetters.length)
-                    ? optionLetters[index]
-                    : '?';
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: option.isCorrect
-                        ? AppColors.success.withOpacity(0.1)
-                        : AppColors.background,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: option.isCorrect
-                          ? AppColors.success
-                          : AppColors.border,
-                      width: option.isCorrect ? 2 : 1,
+  Widget _buildSummaryCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowLight,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // بادج نوع الاختبار
+          if (controller.isStudentMode) ...[
+            Obx(
+              () => Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.person_pin_outlined,
+                      size: 14,
+                      color: Colors.blue.shade700,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'اختبار فردي — ${controller.targetStudentName.value}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.info.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.info.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.people_outline, size: 14, color: AppColors.info),
+                  const SizedBox(width: 4),
+                  Text(
+                    'اختبار الفصل',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.info,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: option.isCorrect
-                              ? AppColors.success
-                              : Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: option.isCorrect
-                                ? AppColors.success
-                                : AppColors.border,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            letter,
-                            style: TextStyle(
-                              color: option.isCorrect
-                                  ? Colors.white
-                                  : AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          option.text,
-                          style: AppTextStyles.bodyMedium,
-                        ),
-                      ),
-                      if (option.isCorrect)
-                        const Icon(
-                          Icons.check_circle,
-                          color: AppColors.success,
-                          size: 20,
-                        ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          Text(controller.titleController.text, style: AppTextStyles.h4),
+          if (controller.descriptionController.text.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              controller.descriptionController.text,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _summaryItem(
+                icon: Icons.quiz_outlined,
+                label: 'عدد الأسئلة',
+                value: '${controller.selectedQuestions.length}',
+                color: AppColors.primary,
+              ),
+              _summaryItem(
+                icon: Icons.star_outline,
+                label: 'الدرجة الكلية',
+                value: '${controller.totalMarks}',
+                color: AppColors.warning,
+              ),
+              _summaryItem(
+                icon: Icons.timer_outlined,
+                label: 'المدة',
+                value: '${controller.durationController.text} دقيقة',
+                color: AppColors.info,
+              ),
+              _summaryItem(
+                icon: Icons.check_circle_outline,
+                label: 'درجة النجاح',
+                value: '${controller.passingMarksController.text}%',
+                color: AppColors.success,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(value, style: AppTextStyles.labelBold.copyWith(color: color)),
+        Text(label, style: AppTextStyles.caption),
+      ],
+    );
+  }
+
+  Widget _buildReviewQuestionItem(int order, q) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                '$order',
+                style: AppTextStyles.labelBold.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  q.questionText,
+                  style: AppTextStyles.bodyMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    _badge(
+                      controller.difficultyLabel(q.difficulty),
+                      controller.difficultyColor(q.difficulty),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -601,29 +841,37 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
     );
   }
 
-  String _getDifficultyLabel(String difficulty) {
-    switch (difficulty) {
-      case 'easy':
-        return 'سهل';
-      case 'medium':
-        return 'متوسط';
-      case 'hard':
-        return 'صعب';
-      default:
-        return difficulty;
-    }
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  Widget _badge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty) {
-      case 'easy':
-        return AppColors.success;
-      case 'medium':
-        return AppColors.warning;
-      case 'hard':
-        return AppColors.error;
-      default:
-        return AppColors.textSecondary;
-    }
+  Widget _loadingDropdown(String hint) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Text(
+        hint,
+        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+      ),
+    );
   }
 }

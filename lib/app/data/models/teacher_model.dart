@@ -91,21 +91,43 @@ class TeacherModel {
 
   factory TeacherModel.fromJson(Map<String, dynamic> json) {
     return TeacherModel(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
+      id: (json['id']?.toString() ?? ''),
+      name: json['name'] ?? json['full_name'] ?? '',
       email: json['email'] ?? '',
-      phone: json['phone'] ?? '',
+      phone: json['phone'] ?? json['phone_number'] ?? '',
       subjects: json['subjects'] != null
           ? List<String>.from(json['subjects'])
           : [],
-      employeeId: json['employeeId'] ?? '',
+      employeeId: (json['employeeId'] ?? json['teacher_code']?.toString() ?? ''),
       school: json['school'],
-      profileImage: json['profileImage'] ?? '',
+      profileImage: json['profileImage'] ?? json['profile_image_url'] ?? '',
       totalStudents: json['totalStudents'] ?? 0,
       totalClasses: json['totalClasses'] ?? 0,
       averageScore: (json['averageScore'] ?? 0).toDouble(),
-      joinedDate: json['joinedDate'] != null
-          ? DateTime.parse(json['joinedDate'])
+      joinedDate: json['joinedDate'] != null || json['created_at'] != null
+          ? DateTime.tryParse(
+                  json['joinedDate']?.toString() ?? json['created_at']?.toString() ?? '') ??
+              DateTime.now()
+          : DateTime.now(),
+    );
+  }
+
+  /// من صف جدول teachers في Supabase (بعد تسجيل الدخول عبر Auth + RLS).
+  factory TeacherModel.fromTeacherRow(Map<String, dynamic> row) {
+    return TeacherModel(
+      id: (row['id']?.toString() ?? ''),
+      name: (row['full_name']?.toString() ?? ''),
+      email: (row['email']?.toString() ?? ''),
+      phone: (row['phone_number']?.toString() ?? ''),
+      subjects: [],
+      employeeId: (row['teacher_code']?.toString() ?? ''),
+      school: null,
+      profileImage: (row['profile_image_url']?.toString() ?? ''),
+      totalStudents: 0,
+      totalClasses: 0,
+      averageScore: 0.0,
+      joinedDate: row['created_at'] != null
+          ? (DateTime.tryParse(row['created_at'].toString()) ?? DateTime.now())
           : DateTime.now(),
     );
   }

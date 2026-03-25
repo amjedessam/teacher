@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import '../../data/services/mock_data_service.dart';
+import '../../data/repositories/notifications_repository.dart';
 import '../../data/models/notification_model.dart';
 
 class NotificationsController extends GetxController {
-  final mockDataService = MockDataService();
+  final NotificationsRepository _repo = Get.find<NotificationsRepository>();
 
   final isLoading = true.obs;
   final notifications = <NotificationModel>[].obs;
@@ -17,33 +17,35 @@ class NotificationsController extends GetxController {
 
   Future<void> loadNotifications() async {
     isLoading.value = true;
-
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    notifications.value = mockDataService.getNotifications();
-    _updateUnreadCount();
-
-    isLoading.value = false;
-  }
-
-  void _updateUnreadCount() {
-    unreadCount.value = notifications
-        .where((notification) => !notification.isRead)
-        .length;
-  }
-
-  void markAsRead(NotificationModel notification) {
-    final index = notifications.indexWhere((n) => n.id == notification.id);
-    if (index != -1) {
-      notifications[index] = notification.copyWith(isRead: true);
+    try {
+      notifications.value = await _repo.getNotifications();
       _updateUnreadCount();
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void markAllAsRead() {
-    notifications.value = notifications
-        .map((n) => n.copyWith(isRead: true))
-        .toList();
-    _updateUnreadCount();
+  void _updateUnreadCount() {
+    unreadCount.value = notifications.where((n) => !n.isRead).length;
+  }
+
+  Future<void> markAsRead(NotificationModel notification) async {
+    final ok = await _repo.markAsRead(notification.id);
+    if (ok) {
+      final index = notifications.indexWhere((n) => n.id == notification.id);
+      if (index != -1) {
+        notifications[index] = notification.copyWith(isRead: true);
+        _updateUnreadCount();
+      }
+    }
+  }
+
+  Future<void> markAllAsRead() async {
+    final ok = await _repo.markAllAsRead();
+    if (ok) {
+      notifications.value =
+          notifications.map((n) => n.copyWith(isRead: true)).toList();
+      _updateUnreadCount();
+    }
   }
 }

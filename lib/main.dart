@@ -2,13 +2,28 @@
 // import 'package:flutter/services.dart';
 // import 'package:get/get.dart';
 // import 'package:get_storage/get_storage.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
+
 // import 'app/core/theme/app_theme.dart';
+// import 'app/core/config/supabase_config.dart';
 // import 'app/routes/app_pages.dart';
 // import 'app/data/services/storage_service.dart';
 // import 'app/data/services/auth_service.dart';
+// import 'app/data/services/question_analysis_service.dart';
+// import 'app/data/services/curriculum_gap_analysis_service.dart';
+// import 'app/data/repositories/question_repository.dart';
+// import 'app/data/repositories/classes_repository.dart';
+// import 'app/data/repositories/notifications_repository.dart';
+// import 'app/data/repositories/attendance_repository.dart';
+// import 'app/data/repositories/pending_content_repository.dart';
 
 // void main() async {
 //   WidgetsFlutterBinding.ensureInitialized();
+
+//   await Supabase.initialize(
+//     url: SupabaseConfig.supabaseUrl,
+//     anonKey: SupabaseConfig.supabaseAnonKey,
+//   );
 
 //   await GetStorage.init();
 
@@ -40,11 +55,34 @@
 //     return service;
 //   });
 
-//   // تهيئة AuthService
 //   await Get.putAsync(() async {
 //     final service = AuthService();
 //     service.onInit();
-//     print('AuthService initialized');
+//     print(' AuthService initialized');
+//     return service;
+//   });
+
+//   await Get.putAsync<QuestionRepository>(() async {
+//     final repo = QuestionRepositorySupabaseImpl();
+//     print(' QuestionRepository (Supabase) initialized');
+//     return repo;
+//   });
+
+//   Get.put(ClassesRepository(), permanent: true);
+//   Get.put(NotificationsRepository(), permanent: true);
+//   Get.put(AttendanceRepository(), permanent: true);
+//   Get.put(PendingContentRepository(), permanent: true);
+//   print(' ClassesRepository, NotificationsRepository, AttendanceRepository, PendingContentRepository initialized');
+
+//   await Get.putAsync(() async {
+//     final service = QuestionAnalysisService();
+//     print(' QuestionAnalysisService initialized');
+//     return service;
+//   });
+
+//   await Get.putAsync(() async {
+//     final service = CurriculumGapAnalysisService();
+//     print(' CurriculumGapAnalysisService initialized');
 //     return service;
 //   });
 
@@ -65,7 +103,6 @@
 //       defaultTransition: Transition.fade,
 //       locale: const Locale('ar'),
 //       fallbackLocale: const Locale('ar'),
-
 //       builder: (context, child) {
 //         return Directionality(textDirection: TextDirection.rtl, child: child!);
 //       },
@@ -77,16 +114,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+// ✅ إضافة هذا الـ import
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 import 'app/core/theme/app_theme.dart';
+import 'app/core/config/supabase_config.dart';
 import 'app/routes/app_pages.dart';
 import 'app/data/services/storage_service.dart';
 import 'app/data/services/auth_service.dart';
 import 'app/data/services/question_analysis_service.dart';
 import 'app/data/services/curriculum_gap_analysis_service.dart';
 import 'app/data/repositories/question_repository.dart';
+import 'app/data/repositories/classes_repository.dart';
+import 'app/data/repositories/notifications_repository.dart';
+import 'app/data/repositories/attendance_repository.dart';
+import 'app/data/repositories/pending_content_repository.dart'
+    hide QuestionRepository, QuestionRepositorySupabaseImpl;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
+  );
 
   await GetStorage.init();
 
@@ -110,41 +162,48 @@ void main() async {
 }
 
 Future<void> _initServices() async {
-  print(' Starting services initialization...');
+  print('🔧 Starting services initialization...');
 
   await Get.putAsync(() async {
     final service = StorageService();
-    print(' StorageService initialized');
+    print('✅ StorageService initialized');
     return service;
   });
 
   await Get.putAsync(() async {
     final service = AuthService();
     service.onInit();
-    print(' AuthService initialized');
+    print('✅ AuthService initialized');
     return service;
   });
 
   await Get.putAsync<QuestionRepository>(() async {
-    final repo = QuestionRepositoryImpl();
-
-    print(' QuestionRepository initialized');
+    final repo = QuestionRepositorySupabaseImpl();
+    print('✅ QuestionRepository (Supabase) initialized');
     return repo;
   });
 
+  Get.put(ClassesRepository(), permanent: true);
+  Get.put(NotificationsRepository(), permanent: true);
+  Get.put(AttendanceRepository(), permanent: true);
+  Get.put(PendingContentRepository(), permanent: true);
+  print(
+    '✅ ClassesRepository, NotificationsRepository, AttendanceRepository, PendingContentRepository initialized',
+  );
+
   await Get.putAsync(() async {
     final service = QuestionAnalysisService();
-    print(' QuestionAnalysisService initialized');
+    print('✅ QuestionAnalysisService initialized');
     return service;
   });
 
   await Get.putAsync(() async {
     final service = CurriculumGapAnalysisService();
-    print(' CurriculumGapAnalysisService initialized');
+    print('✅ CurriculumGapAnalysisService initialized');
     return service;
   });
 
-  print(' All services initialized successfully!');
+  print('🚀 All services initialized successfully!');
 }
 
 class TeacherApp extends StatelessWidget {
@@ -159,8 +218,21 @@ class TeacherApp extends StatelessWidget {
       initialRoute: AppPages.initial,
       getPages: AppPages.routes,
       defaultTransition: Transition.fade,
-      locale: const Locale('ar'),
+
+      // ✅ إضافة دعم اللغة العربية الكامل
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ar', 'SA'), // العربية - السعودية
+        Locale('ar'), // العربية عامة
+        Locale('en', 'US'), // الإنجليزية (احتياطي)
+      ],
+      locale: const Locale('ar', 'SA'),
       fallbackLocale: const Locale('ar'),
+
       builder: (context, child) {
         return Directionality(textDirection: TextDirection.rtl, child: child!);
       },

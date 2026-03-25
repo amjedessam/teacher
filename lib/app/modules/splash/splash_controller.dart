@@ -12,7 +12,8 @@ class SplashController extends GetxController {
   }
 
   Future<void> _checkAuthStatus() async {
-    await Future.delayed(const Duration(seconds: 3));
+    await _authService.ensureSessionLoaded();
+    await Future.delayed(const Duration(milliseconds: 800));
 
     if (_authService.isAuthenticated.value) {
       Get.offNamed(AppRoutes.mainNavigation);

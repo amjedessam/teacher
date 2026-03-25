@@ -187,7 +187,7 @@ class ProfileView extends GetView<ProfileController> {
                       onTap: () {
                         Get.snackbar(
                           'المساعدة',
-                          'للدعم تواصل معنا على Amjed Essam ',
+                          'للدعم تواصل معنا على 774353045 ',
                         );
                       },
                     ),
@@ -205,7 +205,7 @@ class ProfileView extends GetView<ProfileController> {
                                 Text('تطبيق المعلم', style: AppTextStyles.h4),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'الإصدار: amjed.1.0.0',
+                                  'مبرمج التطبيق : Amjed Essam ',
                                   style: AppTextStyles.bodySmall,
                                 ),
                                 const SizedBox(height: 16),
