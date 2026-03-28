@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,6 +12,65 @@ class ChapterItem {
   ChapterItem({required this.id, required this.name});
 }
 
+// ── ثوابت المهارات ─────────────────────────────────────────────────────────
+class SkillOption {
+  final String value;
+  final String label;
+  final String emoji;
+  final Color color;
+  final Color bgColor;
+
+  const SkillOption({
+    required this.value,
+    required this.label,
+    required this.emoji,
+    required this.color,
+    required this.bgColor,
+  });
+}
+
+const List<SkillOption> kSkillOptions = [
+  SkillOption(
+    value: 'remember',
+    label: 'تذكر',
+    emoji: '🧠',
+    color: Color(0xFF1D4ED8),
+    bgColor: Color(0xFFEFF6FF),
+  ),
+  SkillOption(
+    value: 'understand',
+    label: 'فهم',
+    emoji: '💡',
+    color: Color(0xFF15803D),
+    bgColor: Color(0xFFF0FDF4),
+  ),
+  SkillOption(
+    value: 'apply',
+    label: 'تطبيق',
+    emoji: '🔧',
+    color: Color(0xFFB45309),
+    bgColor: Color(0xFFFFFBEB),
+  ),
+  SkillOption(
+    value: 'analyze',
+    label: 'تحليل',
+    emoji: '🔍',
+    color: Color(0xFF7C3AED),
+    bgColor: Color(0xFFF5F3FF),
+  ),
+];
+
+// ── helper: إيجاد SkillOption من القيمة ───────────────────────────────────
+SkillOption? findSkill(String value) {
+  try {
+    return kSkillOptions.firstWhere((s) => s.value == value);
+  } catch (_) {
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+
 class AddQuestionController extends GetxController {
   SupabaseClient get _client => Supabase.instance.client;
 
@@ -22,7 +82,7 @@ class AddQuestionController extends GetxController {
   final subjects = <ClassModel>[].obs;
   final selectedSubjectId = Rxn<int>();
 
-  // الفصول — تُحدَّث عند تغيير المادة
+  // الفصول
   final chapters = <ChapterItem>[].obs;
   final selectedChapterId = Rxn<int>();
 
@@ -33,6 +93,16 @@ class AddQuestionController extends GetxController {
   final correctOptionIndex = 0.obs;
   final isLoading = false.obs;
 
+  // ── مهارة بلوم ──────────────────────────────────────────────────────────
+  /// القيمة المختارة: 'remember' | 'understand' | 'apply' | 'analyze' | ''
+  final selectedSkill = ''.obs;
+
+  /// true أثناء استدعاء Edge Function
+  final skillLoading = false.obs;
+
+  /// رسالة خطأ خاصة بالمهارة (تُعرض أسفل الحقل)
+  final skillError = ''.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -42,6 +112,11 @@ class AddQuestionController extends GetxController {
     // عند تغيير المادة → جلب فصولها
     ever(selectedSubjectId, (id) {
       if (id != null) _loadChapters(id);
+    });
+
+    // عند تغيير نص السؤال → مسح رسالة الخطأ القديمة
+    questionController.addListener(() {
+      if (skillError.value.isNotEmpty) skillError.value = '';
     });
   }
 
@@ -58,7 +133,6 @@ class AddQuestionController extends GetxController {
       final repo = Get.find<ClassesRepository>();
       final list = await repo.getAssignedClasses();
 
-      // إزالة التكرار حسب subject_id
       final bySubject = <int, ClassModel>{};
       for (final c in list) {
         if (c.subjectId != null && !bySubject.containsKey(c.subjectId)) {
@@ -76,7 +150,7 @@ class AddQuestionController extends GetxController {
     }
   }
 
-  // ── جلب فصول المادة المختارة من جدول chapters ─────────────────────────
+  // ── جلب فصول المادة المختارة ───────────────────────────────────────────
   Future<void> _loadChapters(int subjectId) async {
     try {
       selectedChapterId.value = null;
@@ -108,13 +182,9 @@ class AddQuestionController extends GetxController {
   }
 
   // ── إدارة الخيارات ─────────────────────────────────────────────────────
-  void updateOption(int index, String value) {
-    options[index] = value;
-  }
+  void updateOption(int index, String value) => options[index] = value;
 
-  void setCorrectOption(int index) {
-    correctOptionIndex.value = index;
-  }
+  void setCorrectOption(int index) => correctOptionIndex.value = index;
 
   void addOption() {
     if (options.length < 6) options.add('');
@@ -129,7 +199,72 @@ class AddQuestionController extends GetxController {
     }
   }
 
-  // ── حفظ السؤال مباشرة في جدول questions ──────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // ── تحديد مهارة بلوم تلقائياً عبر Supabase Edge Function ──────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<void> detectSkill() async {
+    final text = questionController.text.trim();
+
+    // ① التحقق من وجود نص السؤال
+    if (text.isEmpty) {
+      skillError.value = 'اكتب نص السؤال أولاً قبل التحديد التلقائي';
+      return;
+    }
+
+    skillLoading.value = true;
+    skillError.value = '';
+
+    try {
+      // ② استدعاء Edge Function مع JWT token للمصادقة
+      final session = _client.auth.currentSession;
+      final response = await _client.functions.invoke(
+        'detect-skill',
+        body: {'question_text': text},
+        headers: session != null
+            ? {'Authorization': 'Bearer ${session.accessToken}'}
+            : {},
+      );
+
+      // ③ استخراج القيمة — الـ SDK أحياناً يرجع String أحياناً Map
+      String skill = '';
+      final raw = response.data;
+
+      if (raw is Map) {
+        // الحالة الطبيعية: Map مباشرة
+        skill = raw['skill']?.toString() ?? '';
+      } else if (raw is String) {
+        // بعض إصدارات الـ SDK ترجع JSON String — نحوله يدوياً
+        try {
+          final decoded = jsonDecode(raw) as Map<String, dynamic>;
+          skill = decoded['skill']?.toString() ?? '';
+        } catch (_) {
+          skill = '';
+        }
+      }
+
+      // ④ التحقق من صحة القيمة
+      final validSkills = kSkillOptions.map((s) => s.value).toList();
+      if (skill.isNotEmpty && validSkills.contains(skill)) {
+        selectedSkill.value = skill;
+        skillError.value = '';
+      } else {
+        debugPrint('detectSkill: unexpected response → $raw');
+        skillError.value = 'لم يتمكن النظام من التحديد — اختر يدوياً';
+      }
+    } on FunctionException catch (e) {
+      debugPrint('detectSkill FunctionException: ${e.details}');
+      skillError.value = 'فشل الاتصال بالخدمة — اختر يدوياً';
+    } catch (e) {
+      debugPrint('detectSkill error: $e');
+      skillError.value = 'حدث خطأ غير متوقع — اختر يدوياً';
+    } finally {
+      skillLoading.value = false;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ── حفظ السؤال ─────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> saveQuestion() async {
     if (!formKey.currentState!.validate()) return;
 
@@ -153,7 +288,6 @@ class AddQuestionController extends GetxController {
 
     isLoading.value = true;
     try {
-      // بناء الخيارات بصيغة JSONB
       final optionsJson = List.generate(
         trimmedOptions.length,
         (i) => {
@@ -178,10 +312,13 @@ class AddQuestionController extends GetxController {
         'status': 'approved',
         'created_by_teacher': int.parse(
           Get.find<AuthService>().currentUser.value!.id,
-        ), // ✅ مطلوب للـ RLS
+        ),
         'times_used': 0,
         'times_correct': 0,
         'times_incorrect': 0,
+
+        // ── مهارة بلوم: null لو لم يختر المعلم ──────────────────────────
+        'skill': selectedSkill.value.isEmpty ? null : selectedSkill.value,
       });
 
       Get.back();

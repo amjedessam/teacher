@@ -63,7 +63,7 @@ class AddQuestionView extends GetView<AddQuestionController> {
 
               const SizedBox(height: 24),
 
-              // ── الفصل (ديناميكي من DB) ───────────────────────────────
+              // ── الفصل ───────────────────────────────────────────────────
               Text('الفصل', style: AppTextStyles.labelBold),
               const SizedBox(height: 12),
               Obx(() {
@@ -144,7 +144,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
                             onChanged: (value) {
                               if (value != null) {
                                 controller.selectedQuestionType.value = value;
-                                // إذا صح/خطأ → ضبط الخيارات تلقائياً
                                 if (value == 'true_false') {
                                   controller.options.value = ['صح', 'خطأ'];
                                   controller.correctOptionIndex.value = 0;
@@ -241,6 +240,13 @@ class AddQuestionView extends GetView<AddQuestionController> {
 
               const SizedBox(height: 24),
 
+              // ══════════════════════════════════════════════════════════════
+              // ── مهارة بلوم ─────────────────────────────────────────────
+              // ══════════════════════════════════════════════════════════════
+              _SkillSection(controller: controller),
+
+              const SizedBox(height: 24),
+
               // ── الشرح ───────────────────────────────────────────────────
               Text(
                 'شرح الإجابة الصحيحة (اختياري)',
@@ -310,7 +316,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
         ),
         child: Row(
           children: [
-            // راديو لاختيار الإجابة الصحيحة
             Radio<int>(
               value: index,
               groupValue: controller.correctOptionIndex.value,
@@ -319,8 +324,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
               },
               activeColor: AppColors.success,
             ),
-
-            // حقل الإدخال — للصح/خطأ يكون للقراءة فقط
             Expanded(
               child: isTrueFalse
                   ? Padding(
@@ -351,8 +354,6 @@ class AddQuestionView extends GetView<AddQuestionController> {
                           controller.updateOption(index, value),
                     ),
             ),
-
-            // أيقونة الإجابة الصحيحة أو حذف
             if (isCorrect)
               const Padding(
                 padding: EdgeInsets.only(right: 12),
@@ -371,5 +372,278 @@ class AddQuestionView extends GetView<AddQuestionController> {
         ),
       );
     });
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// ── _SkillSection — قسم مهارة بلوم ─────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+class _SkillSection extends StatelessWidget {
+  const _SkillSection({required this.controller});
+
+  final AddQuestionController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── العنوان مع التوضيح ─────────────────────────────────────────
+        Row(
+          children: [
+            Text('مهارة بلوم', style: AppTextStyles.labelBold),
+            const SizedBox(width: 6),
+            Text(
+              '(تُستخدم في تحليلات الطالب)',
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        // ── الـ Dropdown + زر التحديد التلقائي ────────────────────────
+        Row(
+          children: [
+            // Dropdown
+            Expanded(
+              child: Obx(
+                () => DropdownButtonFormField<String>(
+                  value: controller.selectedSkill.value.isEmpty
+                      ? null
+                      : controller.selectedSkill.value,
+                  decoration: const InputDecoration(
+                    hintText: '— اختر المهارة —',
+                  ),
+                  items: kSkillOptions
+                      .map(
+                        (skill) => DropdownMenuItem<String>(
+                          value: skill.value,
+                          child: Row(
+                            children: [
+                              Text(
+                                skill.emoji,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(skill.label),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    controller.selectedSkill.value = value ?? '';
+                    controller.skillError.value = '';
+                  },
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
+            // زر التحديد التلقائي
+            Obx(
+              () => _AutoDetectButton(
+                isLoading: controller.skillLoading.value,
+                onPressed: controller.detectSkill,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // ── رسالة الخطأ ────────────────────────────────────────────────
+        Obx(() {
+          if (controller.skillError.value.isEmpty) return const SizedBox();
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: Color(0xFFB45309),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    controller.skillError.value,
+                    style: AppTextStyles.caption.copyWith(
+                      color: const Color(0xFFB45309),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+
+        // ── Badge المهارة المحددة ───────────────────────────────────────
+        Obx(() {
+          if (controller.skillLoading.value) {
+            return _SkillDetectingIndicator();
+          }
+          if (controller.selectedSkill.value.isEmpty) return const SizedBox();
+
+          final skill = findSkill(controller.selectedSkill.value);
+          if (skill == null) return const SizedBox();
+
+          return _SkillBadge(skill: skill);
+        }),
+      ],
+    );
+  }
+}
+
+// ── زر التحديد التلقائي ─────────────────────────────────────────────────
+class _AutoDetectButton extends StatelessWidget {
+  const _AutoDetectButton({required this.isLoading, required this.onPressed});
+
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      height: 48,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isLoading
+              ? Colors.grey.shade200
+              : const Color(0xFF7C3AED),
+          foregroundColor: isLoading ? Colors.grey : Colors.white,
+          elevation: isLoading ? 0 : 2,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: isLoading
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  SizedBox(width: 6),
+                  Text(
+                    'جارٍ...',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.auto_awesome_rounded, size: 16),
+                  SizedBox(width: 4),
+                  Text('تلقائي', style: TextStyle(fontSize: 13)),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+// ── مؤشر أثناء التحديد ─────────────────────────────────────────────────
+class _SkillDetectingIndicator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F3FF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFDDD6FE)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Color(0xFF7C3AED),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'يتم تحليل السؤال...',
+            style: AppTextStyles.caption.copyWith(
+              color: const Color(0xFF7C3AED),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Badge المهارة بعد التحديد ────────────────────────────────────────────
+class _SkillBadge extends StatelessWidget {
+  const _SkillBadge({required this.skill});
+
+  final SkillOption skill;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.2),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: Container(
+        key: ValueKey(skill.value),
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: skill.bgColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: skill.color.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_rounded, size: 15, color: skill.color),
+            const SizedBox(width: 6),
+            Text(
+              'تم التحديد:',
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '${skill.emoji} ${skill.label}',
+              style: AppTextStyles.caption.copyWith(
+                color: skill.color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
