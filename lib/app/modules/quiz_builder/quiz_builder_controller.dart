@@ -343,6 +343,7 @@ class QuizBuilderController extends GetxController {
       // ── 3. إسناد الاختبار ─────────────────────────────────────────────────
       if (isStudentMode) {
         // ── وضع الطالب الفردي → طالب واحد فقط ──────────────────────────────
+        // الإشعار يُنشأ من قاعدة البيانات (trigger → notification_jobs → Edge worker).
         await _client.from('exam_assignments').insert({
           'exam_id': examId,
           'student_id': targetStudentId,

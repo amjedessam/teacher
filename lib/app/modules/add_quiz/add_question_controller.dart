@@ -215,14 +215,10 @@ class AddQuestionController extends GetxController {
     skillError.value = '';
 
     try {
-      // ② استدعاء Edge Function مع JWT token للمصادقة
-      final session = _client.auth.currentSession;
+      // ② استدعاء Edge Function — JWT verification معطّل على الدالة
       final response = await _client.functions.invoke(
         'detect-skill',
         body: {'question_text': text},
-        headers: session != null
-            ? {'Authorization': 'Bearer ${session.accessToken}'}
-            : {},
       );
 
       // ③ استخراج القيمة — الـ SDK أحياناً يرجع String أحياناً Map
