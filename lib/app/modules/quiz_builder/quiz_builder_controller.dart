@@ -6,6 +6,7 @@ import '../../data/models/class_model.dart';
 import '../../data/models/question_model.dart';
 import '../../data/models/student_model.dart';
 import '../../data/repositories/classes_repository.dart';
+import '../../data/services/ai_service.dart';
 import '../../data/services/auth_service.dart';
 
 class ChapterOption {
@@ -55,6 +56,9 @@ class QuizBuilderController extends GetxController {
   final allQuestions = <QuestionModel>[].obs;
   final selectedQuestionIds = <String>{}.obs;
   final isLoadingQuestions = false.obs;
+  final isGeneratingQuestions = false.obs;
+
+  AiService get _aiService => Get.find<AiService>();
 
   // ── وضع الطالب الفردي ─────────────────────────────────────────────────────
   bool isStudentMode = false;
@@ -281,6 +285,62 @@ class QuizBuilderController extends GetxController {
       return;
     }
     currentStep.value = 2;
+  }
+
+  Future<void> generateQuestionsByAI() async {
+    if (selectedSubjectId.value == null) {
+      Get.snackbar('خطأ', 'اختر المادة أولاً لتوليد أسئلة ذكية');
+      return;
+    }
+
+    isGeneratingQuestions.value = true;
+    try {
+      final chapterName = selectedChapterId.value == null
+          ? null
+          : chapters
+                .firstWhere(
+                  (ch) => ch.id == selectedChapterId.value,
+                  orElse: () => ChapterOption(id: 0, name: ''),
+                )
+                .name;
+      final generated = await _aiService.generateQuestions(
+        subject: selectedSubjectName.value.isNotEmpty
+            ? selectedSubjectName.value
+            : subjects
+                  .firstWhere((s) => s.subjectId == selectedSubjectId.value)
+                  .subject,
+        chapter: chapterName,
+        difficulty: selectedDifficulty.value ?? 'medium',
+        count: 4,
+      );
+
+      if (generated.isEmpty) {
+        Get.snackbar(
+          'تنبيه',
+          'لم يتم إنشاء أسئلة جديدة، حاول تغيير إعدادات الصعوبة أو المادة.',
+          backgroundColor: Colors.orange.shade100,
+          colorText: Colors.orange.shade900,
+        );
+      } else {
+        allQuestions.insertAll(0, generated);
+        Get.snackbar(
+          'تم',
+          'تم إضافة ${generated.length} سؤالاً مقترحاً من الذكاء الاصطناعي.',
+          backgroundColor: Colors.green.shade100,
+          colorText: Colors.green.shade900,
+        );
+      }
+    } catch (e) {
+      debugPrint('generateQuestionsByAI error: $e');
+      Get.snackbar(
+        'خطأ',
+        'فشل توليد الأسئلة الذكية. تحقق من إعدادات Gemini أو الاتصال.',
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+      );
+    } finally {
+      isGeneratingQuestions.value = false;
+    }
   }
 
   List<QuestionModel> get selectedQuestions =>
