@@ -77,13 +77,80 @@ class QuestionRepositorySupabaseImpl implements QuestionRepository {
   }
 
   @override
-  Future<void> addQuestion(QuestionModel question) async => Future.value();
+  Future<void> addQuestion(QuestionModel question) async {
+    try {
+      final optionsJson = question.options
+          .map((o) => {'id': o.id, 'text': o.text, 'is_correct': o.isCorrect})
+          .toList();
+
+      await _client.from('questions').insert({
+        'question_text': question.questionText,
+        'question_type': question.questionType,
+        'question_options': optionsJson,
+        'correct_answer': question.correctAnswer,
+        'explanation': question.explanation.isEmpty
+            ? null
+            : question.explanation,
+        'difficulty_level': question.difficulty,
+        'skill': question.cognitiveSkill.isEmpty
+            ? null
+            : question.cognitiveSkill,
+        'subject_id': int.tryParse(question.subjectId) ?? null,
+        'chapter_id': int.tryParse(question.chapter) ?? null,
+        'unit': int.tryParse(question.unit) ?? null,
+        'is_active': true,
+        'status': 'approved',
+        'created_by_teacher': int.tryParse(
+          Get.find<AuthService>().currentUser.value!.id,
+        ),
+        'times_used': 0,
+        'times_correct': 0,
+        'times_incorrect': 0,
+      });
+    } catch (e) {
+      debugPrint('addQuestion error: $e');
+    }
+  }
 
   @override
-  Future<void> updateQuestion(QuestionModel question) async => Future.value();
+  Future<void> updateQuestion(QuestionModel question) async {
+    try {
+      final optionsJson = question.options
+          .map((o) => {'id': o.id, 'text': o.text, 'is_correct': o.isCorrect})
+          .toList();
+
+      await _client
+          .from('questions')
+          .update({
+            'question_text': question.questionText,
+            'question_type': question.questionType,
+            'question_options': optionsJson,
+            'correct_answer': question.correctAnswer,
+            'explanation': question.explanation.isEmpty
+                ? null
+                : question.explanation,
+            'difficulty_level': question.difficulty,
+            'skill': question.cognitiveSkill.isEmpty
+                ? null
+                : question.cognitiveSkill,
+            'chapter_id': int.tryParse(question.chapter) ?? null,
+            'unit': int.tryParse(question.unit) ?? null,
+            'is_active': true,
+          })
+          .eq('id', int.tryParse(question.id) ?? 0);
+    } catch (e) {
+      debugPrint('updateQuestion error: $e');
+    }
+  }
 
   @override
-  Future<void> deleteQuestion(String id) async => Future.value();
+  Future<void> deleteQuestion(String id) async {
+    try {
+      await _client.from('questions').delete().eq('id', int.tryParse(id) ?? 0);
+    } catch (e) {
+      debugPrint('deleteQuestion error: $e');
+    }
+  }
 
   @override
   Future<void> updateQuestionStatistics({

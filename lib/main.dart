@@ -115,7 +115,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-// ✅ إضافة هذا الـ import
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/core/theme/app_theme.dart';
@@ -123,6 +123,7 @@ import 'app/core/config/supabase_config.dart';
 import 'app/routes/app_pages.dart';
 import 'app/data/services/storage_service.dart';
 import 'app/data/services/auth_service.dart';
+import 'app/data/services/ai_service.dart';
 import 'app/data/services/question_analysis_service.dart';
 import 'app/data/repositories/question_repository.dart';
 import 'app/data/repositories/classes_repository.dart';
@@ -133,6 +134,29 @@ import 'app/data/repositories/pending_content_repository.dart'
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    // استخدم الدالة الرسمية للمكتبة بدلاً من القراءة اليدوية
+    await dotenv.load(fileName: ".env.example"); 
+    debugPrint('✅ Loaded .env configuration');
+  } catch (e) {
+    debugPrint('⚠️ Error: $e');
+  }
+
+  // try {
+  //   final envString = await rootBundle.loadString('.env.example');
+  //   for (final line in envString.split('\n')) {
+  //     if (line.isEmpty || line.startsWith('#')) continue;
+  //     final index = line.indexOf('=');
+  //     if (index > 0) {
+  //       final key = line.substring(0, index);
+  //       final value = line.substring(index + 1);
+  //       dotenv.env[key] = value;
+  //     }
+  //   }
+  //   debugPrint('✅ Loaded .env configuration');
+  // } catch (e) {
+  //   debugPrint('⚠️ .env file not found or failed to load: $e');
+  // }
 
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
@@ -173,6 +197,12 @@ Future<void> _initServices() async {
     final service = AuthService();
     service.onInit();
     print('✅ AuthService initialized');
+    return service;
+  });
+
+  await Get.putAsync(() async {
+    final service = AiService();
+    print('✅ AiService initialized');
     return service;
   });
 

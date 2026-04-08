@@ -434,6 +434,42 @@ class QuizBuilderView extends GetView<QuizBuilderController> {
             ),
             child: Row(
               children: [
+                // ── زر التوليد الذكي ───────────────────────
+                Expanded(
+                  flex: 2,
+                  child: Obx(
+                    () => OutlinedButton.icon(
+                      onPressed: controller.isGeneratingQuestions.value
+                          ? null
+                          : controller.generateQuestionsByAI,
+                      icon: controller.isGeneratingQuestions.value
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.smart_toy_outlined, size: 20),
+                      label: const Text(
+                        'توليد ذكي',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: AppColors.primary, width: 1.5),
+                        foregroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
                 // ── زر سؤال جديد ────────────────────────
                 Expanded(
                   flex: 2,

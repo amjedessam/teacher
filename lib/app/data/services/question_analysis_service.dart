@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../models/question_model.dart';
 import '../repositories/question_repository.dart';
+import 'package:teacher/app/data/services/ai_service.dart';
 
 /// Student attempt data for discrimination index calculation
 class StudentAttempt {
@@ -173,5 +174,11 @@ class QuestionAnalysisService extends GetxService {
           ? 0.0
           : (needsReview / allQuestions.length * 100),
     };
+  }
+
+  Future<String> generateQualitySummary() async {
+    final aiService = Get.find<AiService>();
+    final stats = await getBankQualityStats();
+    return await aiService.summarizeQuestionBankQuality(stats);
   }
 }
