@@ -1,0 +1,80 @@
+@startuml TeacherApp_DataFlowDiagram
+title تطبيق إدارة الفصول - مخطط تدفق البيانات (DFD)
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultTextAlignment center
+
+' External Entities
+rectangle "المعلم" as teacher
+rectangle "الطالب" as student
+rectangle "نظام الذكاء\nالاصطناعي\n(Gemini API)" as ai_system
+rectangle "قاعدة البيانات\n(Supabase)" as database
+
+' Processes
+rectangle "1.0\nنظام المصادقة\nوالتسجيل" as p1_auth
+rectangle "2.0\nإدارة الفصول\nوالطلاب" as p2_classes
+rectangle "3.0\nإنشاء وإدارة\nالأسئلة" as p3_questions
+rectangle "4.0\nإنشاء\nالاختبارات" as p4_exams
+rectangle "5.0\nتسليم\nالاختبارات" as p5_delivery
+rectangle "6.0\nتقييم\nالإجابات" as p6_grading
+rectangle "7.0\nتحليل الأداء\nوالفجوات" as p7_analysis
+rectangle "8.0\nإنشاء التقارير" as p8_reports
+rectangle "9.0\nإدارة\nالإشعارات" as p9_notifications
+
+' Data Stores
+database "D1: بيانات\nالمعلمين" as ds1_teachers
+database "D2: بيانات\nالطلاب" as ds2_students
+database "D3: الفصول\nوالأقسام" as ds3_classes
+database "D4: بنك\nالأسئلة" as ds4_questions
+database "D5: الاختبارات" as ds5_exams
+database "D6: إجابات\nالطلاب" as ds6_answers
+database "D7: النتائج\nوالدرجات" as ds7_results
+database "D8: الجودة\nوالتحليلات" as ds8_analytics
+database "D9: الحضور" as ds9_attendance
+database "D10: الإشعارات" as ds10_notifications
+
+' Data Flows
+teacher --> p1_auth: بيانات المصادقة
+p1_auth --> ds1_teachers: حفظ بيانات المعلم
+ds1_teachers --> p1_auth: التحقق من البيانات
+
+teacher --> p2_classes: طلب الفصول
+p2_classes --> ds3_classes: استرجاع الفصول
+p2_classes --> ds2_students: استرجاع الطلاب
+
+teacher --> p3_questions: طلب إضافة أسئلة
+p3_questions --> ai_system: طلب توليد أسئلة
+ai_system --> p3_questions: أسئلة معرولة
+p3_questions --> ds4_questions: حفظ الأسئلة
+
+teacher --> p4_exams: إنشاء اختبار
+p4_exams --> ds4_questions: استرجاع الأسئلة المختارة
+p4_exams --> ds5_exams: حفظ الاختبار
+p4_exams --> p5_delivery: تعيين الاختبار
+
+teacher --> p7_analysis: طلب تحليل البيانات
+p7_analysis --> ds6_answers: استرجاع إجابات الطلاب
+p7_analysis --> ds7_results: استرجاع النتائج
+p7_analysis --> ds8_analytics: تحديث التحليلات
+
+p5_delivery --> student: إرسال الاختبار
+student --> p6_grading: إرسال الإجابات
+p6_grading --> ds6_answers: حفظ الإجابات
+p6_grading --> ds7_results: حفظ النتيجة
+p6_grading --> ds8_analytics: تحديث مؤشرات جودة الأسئلة
+
+teacher --> p8_reports: طلب التقرير
+p8_reports --> ds7_results: استرجاع النتائج
+p8_reports --> ds5_exams: استرجاع بيانات الاختبارات
+p8_reports --> ds3_classes: استرجاع بيانات الفصول
+teacher <-- p8_reports: إرسال التقرير
+
+teacher --> p9_notifications: تكوين الإشعارات
+p9_notifications --> ds10_notifications: حفظ إعدادات الإشعارات
+p6_grading --> p9_notifications: إرسال إشعار عند إنهاء الاختبار
+student <-- p9_notifications: إرسال الإشعار
+
+teacher --> p16_attendance: تسجيل الحضور
+p16_attendance --> ds9_attendance: حفظ سجلات الحضور
+
+@enduml

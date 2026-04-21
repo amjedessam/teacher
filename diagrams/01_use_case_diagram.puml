@@ -1,0 +1,66 @@
+@startuml TeacherApp_UseCaseDiagram
+!define DIRECTION top to bottom
+title تطبيق إدارة الفصول - مخطط حالات الاستخدام (Use Case Diagram)
+
+left to right direction
+
+actor "المعلم" as teacher
+actor "الطالب" as student
+actor "نظام الذكاء الاصطناعي" as ai_system
+
+package "نظام إدارة الفصول والاختبارات" {
+    usecase "التسجيل والدخول" as UC01
+    usecase "التحقق من البيانات" as UC02
+    usecase "إدارة الفصول" as UC03
+    usecase "عرض الطلاب" as UC04
+    usecase "إنشاء اختبار" as UC05
+    usecase "بناء بنك أسئلة" as UC06
+    usecase "توليد أسئلة ذكية" as UC07
+    usecase "تقييم جودة الأسئلة" as UC08
+    usecase "تعيين الاختبار" as UC09
+    usecase "الإجابة على الأسئلة" as UC10
+    usecase "عرض النتائج" as UC11
+    usecase "تحليل الأداء" as UC12
+    usecase "تقرير الفجوات التعليمية" as UC13
+    usecase "تقرير يومي" as UC14
+    usecase "إدارة الإشعارات" as UC15
+    usecase "إدارة الحضور" as UC16
+    usecase "عرض الملف الشخصي" as UC17
+    usecase "تحليل أداء الطالب" as UC18
+}
+
+teacher --> UC01
+teacher --> UC02
+teacher --> UC03
+teacher --> UC04
+teacher --> UC05
+teacher --> UC06
+teacher --> UC07
+teacher --> UC08
+teacher --> UC09
+teacher --> UC11
+teacher --> UC12
+teacher --> UC13
+teacher --> UC14
+teacher --> UC15
+teacher --> UC16
+teacher --> UC17
+
+student --> UC01
+student --> UC02
+student --> UC10
+student --> UC11
+student --> UC18
+
+ai_system --> UC07
+
+UC06 --> UC07
+UC06 --> UC08
+UC05 --> UC09
+UC09 --> UC10
+UC10 --> UC11
+UC11 --> UC12
+UC12 --> UC13
+UC12 --> UC14
+
+@enduml

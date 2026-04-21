@@ -1,0 +1,298 @@
+@startuml TeacherApp_SequenceDiagram_Login
+title تطبيق إدارة الفصول - مخطط تسلسل الأحداث (1) - عملية التسجيل والدخول
+
+participant "التطبيق" as app
+participant "LoginView" as view
+participant "LoginController" as controller
+participant "AuthService" as auth_service
+participant "StorageService" as storage
+participant "Supabase" as supabase
+
+app -> view: بدء تحميل الشاشة
+activate view
+
+view -> controller: initialize()
+activate controller
+
+controller -> auth_service: check current user
+activate auth_service
+auth_service -> storage: get saved token
+activate storage
+storage --> auth_service: token (if exists)
+deactivate storage
+auth_service --> controller: current user status
+deactivate auth_service
+
+view <-- controller: ready
+deactivate controller
+
+deactivate view
+
+user -> view: enter email & password
+view -> controller: login(email, password)
+activate controller
+
+controller -> auth_service: authenticate(email, password)
+activate auth_service
+
+auth_service -> supabase: POST /auth/v1/token\n{email, password}
+activate supabase
+supabase --> auth_service: {user, session, token}
+deactivate supabase
+
+auth_service -> storage: save token
+activate storage
+storage --> auth_service: saved
+deactivate storage
+
+auth_service -> storage: save user data
+activate storage
+storage --> auth_service: saved
+deactivate storage
+
+auth_service --> controller: success
+deactivate auth_service
+
+controller -> app: navigate to dashboard
+deactivate controller
+
+@enduml
+
+@startuml TeacherApp_SequenceDiagram_CreateQuiz
+title تطبيق إدارة الفصول - مخطط تسلسل الأحداث (2) - إنشاء واختبار
+
+participant "المعلم" as teacher
+participant "QuizBuilderView" as quiz_view
+participant "QuizBuilderController" as quiz_controller
+participant "AiService" as ai_service
+participant "QuestionRepository" as q_repo
+participant "Gemini API" as gemini
+participant "Supabase" as supabase
+
+teacher -> quiz_view: فتح شاشة بناء الاختبار
+activate quiz_view
+
+quiz_view -> quiz_controller: onInit()
+activate quiz_controller
+
+quiz_controller -> q_repo: load previous questions
+activate q_repo
+q_repo -> supabase: SELECT * FROM questions
+activate supabase
+supabase --> q_repo: question list
+deactivate supabase
+q_repo --> quiz_controller: questions
+deactivate q_repo
+
+quiz_controller --> quiz_view: display questions
+deactivate quiz_controller
+
+deactivate quiz_view
+
+teacher -> quiz_view: select generate questions\n(subject, chapter, count)
+quiz_view -> quiz_controller: generateQuestions(params)
+activate quiz_controller
+
+quiz_controller -> ai_service: generateQuestions(params)
+activate ai_service
+
+ai_service -> gemini: POST /generateContent\n{prompt with subject, chapter}
+activate gemini
+gemini --> ai_service: JSON array of questions
+deactivate gemini
+
+ai_service -> ai_service: parse JSON response
+ai_service -> ai_service: extract question options
+ai_service -> ai_service: create QuestionModel objects
+
+ai_service --> quiz_controller: List<QuestionModel>
+deactivate ai_service
+
+quiz_controller -> quiz_view: update UI with new questions
+deactivate quiz_controller
+
+deactivate quiz_view
+
+teacher -> quiz_view: select questions & arrange them
+teacher -> quiz_view: add quiz title & settings
+teacher -> quiz_view: click save
+quiz_view -> quiz_controller: saveQuiz(title, questions, settings)
+activate quiz_controller
+
+quiz_controller -> q_repo: save questions
+activate q_repo
+q_repo -> supabase: INSERT/UPDATE questions
+activate supabase
+supabase --> q_repo: success
+deactivate supabase
+q_repo --> quiz_controller: saved
+deactivate q_repo
+
+quiz_controller -> q_repo: create exam record
+activate q_repo
+q_repo -> supabase: INSERT INTO exams (title, questions, etc)
+activate supabase
+supabase --> q_repo: exam_id
+deactivate supabase
+q_repo --> quiz_controller: exam_id
+deactivate q_repo
+
+quiz_controller -> quiz_view: show success message
+deactivate quiz_controller
+
+deactivate quiz_view
+
+@enduml
+
+@startuml TeacherApp_SequenceDiagram_StudentTakesExam
+title تطبيق إدارة الفصول - مخطط تسلسل الأحداث (3) - الطالب يحل الاختبار
+
+participant "الطالب" as student
+participant "ExamView" as exam_view
+participant "ExamController" as exam_controller
+participant "ExamRepository" as exam_repo
+participant "Supabase" as supabase
+
+student -> exam_view: فتح الاختبار
+activate exam_view
+
+exam_view -> exam_controller: onInit(examId)
+activate exam_controller
+
+exam_controller -> exam_repo: get exam questions
+activate exam_repo
+exam_repo -> supabase: SELECT * FROM exams WHERE id = examId
+activate supabase
+supabase --> exam_repo: exam with questions
+deactivate supabase
+exam_repo --> exam_controller: exam data
+deactivate exam_repo
+
+exam_controller --> exam_view: display questions
+deactivate exam_controller
+
+deactivate exam_view
+
+student -> exam_view: answer question 1
+exam_view -> exam_controller: recordAnswer(questionId, selectedOption)
+activate exam_controller
+exam_controller -> exam_controller: store answer in memory
+deactivate exam_controller
+
+loop للأسئلة المتبقية
+    student -> exam_view: answer next question
+    exam_view -> exam_controller: recordAnswer(...)
+    activate exam_controller
+    exam_controller -> exam_controller: store answer
+    deactivate exam_controller
+end
+
+student -> exam_view: click submit
+exam_view -> exam_controller: submitExam()
+activate exam_controller
+
+exam_controller -> exam_controller: grade answers\n(compare with correct answers)
+exam_controller -> exam_controller: calculate score & percentage
+
+exam_controller -> exam_repo: save student answers
+activate exam_repo
+exam_repo -> supabase: INSERT INTO student_answers\n(student_id, exam_id, answers, score)
+activate supabase
+supabase --> exam_repo: success
+deactivate supabase
+exam_repo --> exam_controller: saved
+deactivate exam_repo
+
+exam_controller -> exam_controller: update question statistics\n(times used, times correct, discrimination index)
+exam_controller -> exam_repo: update question statistics
+activate exam_repo
+exam_repo -> supabase: UPDATE questions SET\ntimesUsed++, timesCorrect++, etc
+activate supabase
+supabase --> exam_repo: success
+deactivate supabase
+exam_repo --> exam_controller: updated
+deactivate exam_repo
+
+exam_controller --> exam_view: show result with score
+deactivate exam_controller
+
+deactivate exam_view
+
+@enduml
+
+@startuml TeacherApp_SequenceDiagram_Analysis
+title تطبيق إدارة الفصول - مخطط تسلسل الأحداث (4) - تحليل الأداء والفجوات
+
+participant "المعلم" as teacher
+participant "AnalysisView" as analysis_view
+participant "AnalysisController" as analysis_controller
+participant "QuestionAnalysisService" as q_analysis
+participant "CurriculumGapAnalysisService" as gap_analysis
+participant "ClassesRepository" as classes_repo
+participant "Supabase" as supabase
+
+teacher -> analysis_view: فتح شاشة التحليل
+activate analysis_view
+
+analysis_view -> analysis_controller: onInit(classId)
+activate analysis_controller
+
+alt تحليل جودة الأسئلة
+    analysis_controller -> q_analysis: analyzeQuestionBank()
+    activate q_analysis
+    
+    q_analysis -> classes_repo: get all questions in subject
+    activate classes_repo
+    classes_repo -> supabase: SELECT * FROM questions WHERE subject = ?
+    activate supabase
+    supabase --> classes_repo: questions
+    deactivate supabase
+    classes_repo --> q_analysis: questions
+    deactivate classes_repo
+    
+    q_analysis -> q_analysis: calculate discrimination index\n(correlation with total score)
+    q_analysis -> q_analysis: calculate difficulty index\n(percentage of correct answers)
+    q_analysis -> q_analysis: evaluate question quality\n(based on indices)
+    q_analysis -> q_analysis: group by quality: excellent,\ngood, fair, needs review
+    
+    q_analysis --> analysis_controller: quality statistics
+    deactivate q_analysis
+end
+
+alt تحليل الفجوات المنهجية
+    analysis_controller -> gap_analysis: analyzeCurriculumGaps(classId)
+    activate gap_analysis
+    
+    gap_analysis -> classes_repo: get class students
+    activate classes_repo
+    classes_repo -> supabase: SELECT * FROM students WHERE class_id = ?
+    activate supabase
+    supabase --> classes_repo: students
+    deactivate supabase
+    classes_repo --> gap_analysis: students
+    deactivate classes_repo
+    
+    gap_analysis -> gap_analysis: get student scores per chapter
+    gap_analysis -> gap_analysis: identify chapters where\naverage score < 60%
+    gap_analysis -> gap_analysis: rank weak chapters
+    
+    gap_analysis --> analysis_controller: curriculum gaps
+    deactivate gap_analysis
+end
+
+analysis_controller -> analysis_view: display analysis results
+deactivate analysis_controller
+
+deactivate analysis_view
+
+teacher -> analysis_view: view detailed charts
+analysis_view -> analysis_controller: generateStatisticalCharts()
+activate analysis_controller
+
+analysis_controller -> analysis_controller: prepare chart data\n(discrimination, difficulty distributions)
+analysis_controller -> analysis_view: render charts
+deactivate analysis_controller
+
+deactivate analysis_view
+
+@enduml
