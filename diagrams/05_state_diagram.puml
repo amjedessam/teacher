@@ -1,0 +1,179 @@
+@startuml TeacherApp_StateDiagram
+title تطبيق إدارة الفصول - مخطط الحالات الداخلية (State Diagram)
+
+' ====== Student Exam Participation State Machine ======
+state "حالات الطالب في الاختبار" as student_exam_states {
+    [*] --> NotEnrolled: يتم إنشاء الاختبار
+    
+    NotEnrolled --> Assigned: المعلم يعيّن الاختبار\nللطالب
+    
+    Assigned --> NotStarted: ينتظر الطالب
+    
+    NotStarted --> InProgress: الطالب يبدأ الاختبار\nالمدة الزمنية تبدأ
+    
+    InProgress --> InProgress: الطالب يرد على الأسئلة
+    
+    InProgress --> TimeExpired: انتهت المدة الزمنية\n[auto-submit]
+    
+    InProgress --> Submitted: الطالب ينقر إرسال\nالإجابات
+    
+    TimeExpired --> Graded
+    
+    Submitted --> Graded: نظام التقييم\nيحسب النتيجة
+    
+    NotStarted --> Missed: لم يبدأ قبل\nانتهاء المدة [timeout]
+    
+    Graded --> [*]: الاختبار منتهى
+    
+    Missed --> [*]: الاختبار منتهى
+    
+    assign_check: False
+    auto_submit: True
+}
+
+' ====== Question State Machine ======
+state "حالات الأسئلة" as question_states {
+    [*] --> Draft: المعلم ينشئ السؤال\nأو الذكاء الاصطناعي يولده
+    
+    Draft --> PendingReview: السؤال جاهز للمراجعة
+    
+    PendingReview --> Approved: المعلم يوافق على السؤال
+    
+    Approved --> Active: السؤال متاح\nللاستخدام
+    
+    Approved --> Rejected: المعلم يرفض السؤال\nيحتاج تعديلات
+    
+    Rejected --> Draft: العودة للتعديل
+    
+    Active --> Active: تطور الإحصائيات\n(discrimination, difficulty index)\n[each use]\n\nتقييم الجودة تلقائياً\n- ممتاز: discrimination > 0.7\n- جيد: 0.5-0.7\n- مقبول: 0.3-0.5\n- ضعيف: < 0.3
+    
+    Active --> Archived: المعلم يؤرشف السؤال\nلا يستخدم فيما بعد
+    
+    Archived --> [*]
+    
+    Active --> [*]: انتهاء الاستخدام
+}
+
+' ====== Exam State Machine ======
+state "حالات الاختبار" as exam_states {
+    [*] --> Draft: المعلم ينشئ الاختبار
+    
+    Draft --> InDesign: المعلم يختار الأسئلة\nويضبط الإعدادات\n(الوقت، عدد المحاولات)
+    
+    InDesign --> ReadyToPublish: يتم حفظ الاختبار
+    
+    ReadyToPublish --> Published: المعلم ينشر الاختبار\nيصبح متاحاً للطلاب\n[notification sent]
+    
+    Published --> Active: في فترة الاختبار
+    
+    Active --> Closed: انتهت مدة الاختبار\nلا يمكن للطلاب الإجابة
+    
+    Closed --> Graded: تم تقييم جميع الإجابات
+    
+    Graded --> [*]: الاختبار مكتمل
+    
+    Published --> Cancelled: المعلم يلغي الاختبار
+    Cancelled --> [*]
+}
+
+' ====== Teacher Activity State Machine ======
+state "حالات نشاط المعلم" as teacher_states {
+    [*] --> LoggedOut
+    
+    LoggedOut --> LoggingIn: يدخل البيانات
+    
+    LoggingIn --> LoggedIn: المصادقة ناجحة
+    
+    LoggedIn --> ViewingDashboard: يعرض الصفحة الرئيسية\nالإحصائيات والفصول
+    
+    ViewingDashboard --> ManagingClasses: يختار فصل
+    
+    ManagingClasses --> ManagingClasses: يدير الطلاب\nيعرض سجلات الحضور\nيرى إحصائيات الفصل
+    
+    ManagingClasses --> CreatingQuiz: ينقر إنشاء اختبار
+    
+    CreatingQuiz --> BuiltQuiz: ينتقي الأسئلة\nيحفظ الاختبار
+    
+    BuiltQuiz --> PublishedQuiz: ينشر الاختبار\nللطلاب
+    
+    PublishedQuiz --> AnalyzingResults: يراجع النتائج\nوالإحصائيات
+    
+    AnalyzingResults --> ViewingReports: يعرض التقارير\nتقرير يومي\nتقرير الفجوات
+    
+    ViewingReports --> ManagingClasses: يعود للفصل
+    
+    ViewingDashboard --> ViewingProfile: يعرض ملفه الشخصي
+    
+    ViewingProfile --> ViewingDashboard: يعود للصفحة الرئيسية
+    
+    ViewingDashboard --> LoggedOut: تسجيل الخروج
+    
+    LoggedOut --> [*]
+}
+
+' ====== Student Activity State Machine ======
+state "حالات نشاط الطالب" as student_states {
+    [*] --> LoggedOut: لم يسجل الدخول
+    
+    LoggedOut --> LoggingIn: يدخل البيانات
+    
+    LoggingIn --> LoggedIn: المصادقة ناجحة
+    
+    LoggedIn --> ViewingDashboard: يعرض الصفحة الرئيسية\nالاختبارات المتاحة\nالنتائج السابقة
+    
+    ViewingDashboard --> BrowsingExams: يبحث عن الاختبارات
+    
+    BrowsingExams --> TakingExam: ينقر على اختبار\nيبدأ الإجابة
+    
+    TakingExam --> ReviewingAnswers: ينهي الإجابة\nيراجع قبل الإرسال
+    
+    ReviewingAnswers --> [*]: إما يرسل أو يعود للتعديل
+    
+    ReviewingAnswers --> SubmittingExam: ينقر إرسال
+    
+    SubmittingExam --> ViewingResult: يشاهد النتيجة\nالدرجة والشرح
+    
+    ViewingResult --> ViewingDashboard: يعود للرئيسية
+    
+    ViewingDashboard --> ViewingProfile: يعرض ملفه الشخصي\nأداؤه بالمواد\nمستوى إتقانه
+    
+    ViewingProfile --> ViewingDashboard: يعود للرئيسية
+    
+    ViewingDashboard --> LoggedOut: تسجيل الخروج
+    
+    LoggedOut --> [*]
+}
+
+' Legend
+note right of student_exam_states
+الحالات في الاختبار:
+- NotEnrolled: لم يتم تعيين الاختبار للطالب
+- Assigned: تم تعيين الاختبار فقط
+- NotStarted: الاختبار متاح لكن الطالب لم يبدأ
+- InProgress: الطالب يحل الأسئلة الآن
+- TimeExpired: انتهت مدة الاختبار
+- Submitted: أرسل الإجابات
+- Graded: تم تقييم الإجابات وظهرت النتيجة
+- Missed: لم يحل الاختبار في الوقت
+end note
+
+note right of question_states
+مؤشرات جودة السؤال:
+Discrimination Index = هل السؤال يميز بين
+الطلاب الأقوياء والضعفاء
+
+Difficulty Index = مستوى صعوبة السؤال
+(% من الطلاب الذين أجابوا صحيح)
+end note
+
+note right of exam_states
+عمليات الاختبار:
+Draft → InDesign → ReadyToPublish 
+→ Published → Active → Closed → Graded
+
+التحولات المتاحة:
+- Published ← Draft (إعادة فتح للتعديل)
+- Active ← Published (بدء الاختبار تلقائياً)
+end note
+
+@enduml

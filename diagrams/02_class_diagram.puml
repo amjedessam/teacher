@@ -1,0 +1,299 @@
+@startuml TeacherApp_ClassDiagram
+title تطبيق إدارة الفصول - مخطط الفئات (Class Diagram)
+
+package "Models" {
+    class TeacherModel {
+        - id: String
+        - name: String
+        - email: String
+        - profileImage: String
+        - phone: String
+        - subject: String
+        - schoolName: String
+        - joinedDate: DateTime
+        --
+        + toJson(): Map<String, dynamic>
+        + fromJson(): TeacherModel
+    }
+
+    class StudentModel {
+        - id: String
+        - name: String
+        - email: String
+        - studentCode: String
+        - classId: String
+        - className: String
+        - profileImage: String
+        - averageScore: double
+        - totalQuizzes: int
+        - completedQuizzes: int
+        - masteryLevel: String
+        - subjectPerformance: List<SubjectPerformance>
+        - lastActive: DateTime
+        --
+        + successRate: double
+        + toJson(): Map<String, dynamic>
+        + fromJson(): StudentModel
+    }
+
+    class ClassModel {
+        - id: String
+        - name: String
+        - subject: String
+        - grade: String
+        - totalStudents: int
+        - activeStudents: int
+        - averageScore: double
+        - totalQuizzes: int
+        - color: String
+        - icon: String
+        --
+        + toJson(): Map<String, dynamic>
+        + fromJson(): ClassModel
+    }
+
+    class QuestionModel {
+        - id: String
+        - questionText: String
+        - questionType: String
+        - options: List<QuestionOption>
+        - correctAnswer: String
+        - explanation: String
+        - difficulty: String
+        - cognitiveSkill: String
+        - subject: String
+        - chapter: String
+        - timesUsed: int
+        - timesCorrect: int
+        - discriminationIndex: double
+        - quality: String
+        --
+        + successRate: double
+        + toJson(): Map<String, dynamic>
+        + fromJson(): QuestionModel
+    }
+
+    class QuestionOption {
+        - id: String
+        - text: String
+        - isCorrect: bool
+        --
+        + toJson(): Map<String, dynamic>
+        + fromJson(): QuestionOption
+    }
+
+    class NotificationModel {
+        - id: String
+        - title: String
+        - message: String
+        - type: String
+        - createdAt: DateTime
+        - isRead: bool
+        --
+        + toJson(): Map<String, dynamic>
+    }
+
+    QuestionModel "1" *-- "many" QuestionOption
+}
+
+package "Services" {
+    class AuthService {
+        - supabaseClient: SupabaseClient
+        - currentUser: Rxn<User>
+        --
+        + login(email: String, password: String): Future<void>
+        + logout(): Future<void>
+        + getCurrentUser(): User?
+    }
+
+    class AiService {
+        - apiKey: String
+        - endpoint: String
+        --
+        + generateQuestions(): Future<List<QuestionModel>>
+        + summarizeQuestionBankQuality(): Future<String>
+        - buildQuestionPrompt(): String
+        - generateContent(): Future<String>
+    }
+
+    class StorageService {
+        - storage: GetStorage
+        --
+        + saveKey(key: String, value: dynamic): Future<void>
+        + getKey(key: String): dynamic
+        + deleteKey(key: String): Future<void>
+    }
+
+    class QuestionAnalysisService {
+        - repository: QuestionRepository
+        --
+        + analyzeQuestionQuality(): Future<Map<String, dynamic>>
+        + calculateStatistics(): Future<Map<String, dynamic>>
+    }
+
+    class CurriculumGapAnalysisService {
+        --
+        + analyzeCurriculumGaps(): Future<Map<String, dynamic>>
+        + identifyWeakAreas(): Future<List<String>>
+    }
+}
+
+package "Repositories" {
+    interface IRepository {
+        + getAll(): Future<List<T>>
+        + getById(id: String): Future<T>
+        + create(item: T): Future<void>
+        + update(item: T): Future<void>
+        + delete(id: String): Future<void>
+    }
+
+    class QuestionRepository {
+        - supabaseClient: SupabaseClient
+        --
+        + getQuestionsBySubject(): Future<List<QuestionModel>>
+        + createQuestion(): Future<void>
+        + updateQuestion(): Future<void>
+        + deleteQuestion(): Future<void>
+        + searchQuestions(): Future<List<QuestionModel>>
+    }
+
+    class ClassesRepository {
+        - supabaseClient: SupabaseClient
+        --
+        + getTeacherClasses(): Future<List<ClassModel>>
+        + getClassStudents(): Future<List<StudentModel>>
+        + createClass(): Future<void>
+    }
+
+    class NotificationsRepository {
+        - supabaseClient: SupabaseClient
+        --
+        + getNotifications(): Future<List<NotificationModel>>
+        + markAsRead(): Future<void>
+        + deleteNotification(): Future<void>
+    }
+
+    class AttendanceRepository {
+        - supabaseClient: SupabaseClient
+        --
+        + getAttendanceRecords(): Future<List<AttendanceRecord>>
+        + recordAttendance(): Future<void>
+    }
+
+    class PendingContentRepository {
+        - supabaseClient: SupabaseClient
+        --
+        + getPendingContent(): Future<List<PendingContent>>
+        + approvePendingContent(): Future<void>
+    }
+
+    IRepository <|-- QuestionRepository
+    IRepository <|-- ClassesRepository
+    IRepository <|-- NotificationsRepository
+    IRepository <|-- AttendanceRepository
+    IRepository <|-- PendingContentRepository
+}
+
+package "Controllers" {
+    class GetxController {
+        - obx: RxValue
+        --
+        + update(): void
+        + getBuilder(): void
+    }
+
+    class LoginController {
+        - authService: AuthService
+        - email: RxString
+        - password: RxString
+        - isLoading: RxBool
+        --
+        + login(): Future<void>
+        + validateEmail(): bool
+    }
+
+    class DashboardController {
+        - authService: AuthService
+        - classesRepo: ClassesRepository
+        - teacher: Rxn<TeacherModel>
+        - totalStudents: RxInt
+        - recentExams: RxList<RecentExam>
+        --
+        + onInit(): void
+        + loadDashboardData(): Future<void>
+    }
+
+    class QuizBuilderController {
+        - questionRepo: QuestionRepository
+        - questions: RxList<QuestionModel>
+        - quizTitle: RxString
+        --
+        + addQuestion(): void
+        + removeQuestion(): void
+        + saveQuiz(): Future<void>
+    }
+
+    class StudentDetailController {
+        - classesRepo: ClassesRepository
+        - student: Rxn<StudentModel>
+        - examScores: RxList
+        --
+        + onInit(): void
+        + loadStudentData(): Future<void>
+    }
+
+    GetxController <|-- LoginController
+    GetxController <|-- DashboardController
+    GetxController <|-- QuizBuilderController
+    GetxController <|-- StudentDetailController
+}
+
+package "Views" {
+    class Widget {
+        + build(): Widget
+    }
+
+    class SplashView {
+        --
+        + build(): Widget
+    }
+
+    class LoginView {
+        - controller: LoginController
+        --
+        + build(): Widget
+    }
+
+    class DashboardView {
+        - controller: DashboardController
+        --
+        + build(): Widget
+    }
+
+    class QuizBuilderView {
+        - controller: QuizBuilderController
+        --
+        + build(): Widget
+    }
+
+    Widget <|-- SplashView
+    Widget <|-- LoginView
+    Widget <|-- DashboardView
+    Widget <|-- QuizBuilderView
+}
+
+' سلاسل الارتباط
+LoginController --> AuthService
+DashboardController --> ClassesRepository
+DashboardController --> NotificationsRepository
+DashboardController --> AuthService
+QuizBuilderController --> QuestionRepository
+QuizBuilderController --> AiService
+StudentDetailController --> ClassesRepository
+
+AuthService --> StorageService
+QuestionRepository --> QuestionModel
+ClassesRepository --> ClassModel
+ClassesRepository --> StudentModel
+
+@enduml

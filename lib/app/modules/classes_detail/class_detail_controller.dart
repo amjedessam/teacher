@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:teacher/app/data/models/gapModel.dart';
 import '../../data/models/class_model.dart';
 import '../../data/models/student_model.dart';
 import '../../data/repositories/classes_repository.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/ai_service.dart';
 import '../../routes/app_routes.dart';
 
 // ══════════════════════════════════════════════════════════════
@@ -259,7 +261,44 @@ class ClassDetailController extends GetxController {
       isLoadingExams.value = false;
     }
   }
-
+Future<void> goToGapsAnalysis() async {
+  // إظهار Loading بسيط
+  Get.dialog(Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Center(child: CircularProgressIndicator()),
+          const SizedBox(height: 16),
+         Material( // أضف هذا الويدجت
+    color: Colors.transparent, // لجعل الخلفية شفافة إذا كنت داخل Dialog
+    child: const Text("جاري تحليل البيانات بواسطة مساعد AI ..." ,style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: Colors.white)),
+     
+  ),
+           ],
+    ),
+  ), barrierDismissible: false);
+  
+  try {
+    var prompt=generateAIAnalysisData();
+    // 1. استدعاء دالة الذكاء الاصطناعي
+    final List<ChapterGap> gaps = await AiService.analyzeCurriculumGapsWithAI(prompt);
+    
+    Get.back(); // إغلاق الـ Loading
+    
+    // 2. الانتقال وإرسال القائمة الجاهزة
+    Get.toNamed(
+      AppRoutes.curriculumGaps,
+      arguments: {'gaps': gaps, 'className': classItem.value?.name},
+    );
+  } catch (e) {
+    Get.back();
+    Get.dialog(Center(
+      child: Text("حدث خطأ أثناء تحليل البيانات: \$e"),
+    ), barrierDismissible: false);
+  }
+}
   // ── فتح تفاصيل اختبار محدد ───────────────────────────────
   void openExamDetail(ClassExamStat exam) {
     final c = classItem.value;
@@ -292,4 +331,56 @@ class ClassDetailController extends GetxController {
       },
     );
   }
+
+
+  Map<String, dynamic> generateAIAnalysisData() {
+  final c = classItem.value;
+  
+  // 1. تجميع بيانات الطلاب وتحليل مستوياتهم
+  List<Map<String, dynamic>> studentsData = students.map((s) => {
+    "id": s.name,
+    "mastery_level": s.masteryLevel, // Mastered, Proficient, etc.
+    "avg_score": s.averageScore,
+    "quizzes_completion": "${s.completedQuizzes}/${s.totalQuizzes}",
+  }).toList();
+
+  // حساب توزيع المستويات للفصل ككل
+  Map<String, int> masteryDistribution = {
+    "Mastered": students.where((s) => s.masteryLevel == 'Mastered').length,
+    "Proficient": students.where((s) => s.masteryLevel == 'Proficient').length,
+    "Developing": students.where((s) => s.masteryLevel == 'Developing').length,
+    "Needs Improvement": students.where((s) => s.masteryLevel == 'Needs Improvement').length,
+  };
+
+  // 2. تجميع بيانات الاختبارات والإحصائيات
+  List<Map<String, dynamic>> examsData = classExams.map((e) => {
+    "title": e.title,
+    "average_score": e.averageScore,
+    "completion_rate": e.completionRate,
+    "duration_minutes": e.durationMinutes,
+    "total_marks": e.totalMarks,
+    "passing_marks": e.passingMarks,
+    "stats": {
+      "assigned": e.totalAssigned,
+      "completed": e.totalCompleted,
+    }
+  }).toList();
+
+  // 3. تجميع الهيكل النهائي
+  return {
+    "timestamp": DateTime.now().toIso8601String(),
+    "class_info": {
+      "name": c?.name ?? "Unknown",
+      "total_students": students.length,
+    },
+    "academic_performance": {
+      "overall_mastery_distribution": masteryDistribution,
+      "students_detailed_scores": studentsData,
+    },
+    "exams_analysis": examsData,
+    // ملاحظة: إذا كان لديك بيانات ExamDetailStats مخزنة، يمكن إضافتها هنا
+    "analysis_goal": "تحليل الفجوات التعليمية وتقديم توصيات لتحسين أداء الطلاب الضعفاء"
+  };
+}
+
 }

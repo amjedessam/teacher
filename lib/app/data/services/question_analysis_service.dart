@@ -176,9 +176,9 @@ class QuestionAnalysisService extends GetxService {
     };
   }
 
-  Future<String> generateQualitySummary() async {
-    final aiService = Get.find<AiService>();
-    final stats = await getBankQualityStats();
-    return await aiService.summarizeQuestionBankQuality(stats);
-  }
+  // Future<String> generateQualitySummary() async {
+  //   final aiService = Get.find<AiService>();
+  //   final stats = await getBankQualityStats();
+  //   return await aiService.summarizeQuestionBankQuality(stats);
+  // }
 }

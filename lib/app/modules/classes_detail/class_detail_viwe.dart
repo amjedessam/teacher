@@ -202,10 +202,11 @@ class ClassDetailView extends GetView<ClassDetailController> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          Get.toNamed(
-                            AppRoutes.curriculumGaps,
-                            arguments: classItem,
-                          );
+                          controller.goToGapsAnalysis();
+                          // Get.toNamed(
+                          //   AppRoutes.curriculumGaps,
+                          //   arguments: classItem,
+                          // );
                         },
                         icon: const Icon(Icons.menu_book_outlined, size: 18),
                         label: const Text('الفجوات المنهجية'),
